@@ -1,0 +1,58 @@
+import { Group } from 'three';
+import { DEG, TUNING } from '../tuning';
+import type { Perceivable } from '../perception/tags';
+import { colorFor, makeBoxMesh, makePerceivable } from './build';
+
+export interface DoorDef {
+  id: string;
+  hinge: [number, number]; // (x, z) of the hinge
+  along: 'x' | 'z'; // direction the closed door runs from its hinge (+x or +z)
+  width: number;
+  swingSign: 1 | -1; // which way it opens
+}
+
+// A door that swings on its hinge. It is perceivable (and blocks sight) like any wall.
+export class Door {
+  readonly pivot = new Group();
+  readonly item: Perceivable;
+  private openness: number = TUNING.door.startOpenFraction;
+  private target: number = TUNING.door.startOpenFraction;
+  private readonly closedYaw: number;
+
+  constructor(private readonly def: DoorDef) {
+    const { doorHeight } = TUNING.house;
+    const { thickness } = TUNING.door;
+    const height = doorHeight - 0.02;
+    const mesh = makeBoxMesh(colorFor('door'));
+    mesh.scale.set(def.width, height, thickness);
+    mesh.position.set(def.width / 2, height / 2, 0);
+    this.pivot.add(mesh);
+    this.pivot.position.set(def.hinge[0], 0, def.hinge[1]);
+    // Local +x is the door's length; rotate so it points along +x or +z when closed.
+    this.closedYaw = def.along === 'x' ? 0 : -Math.PI / 2;
+    this.item = makePerceivable(def.id, 'door', mesh, true);
+    this.applyRotation();
+  }
+
+  distanceTo(x: number, z: number): number {
+    const half = this.def.width / 2;
+    const cx = this.def.hinge[0] + (this.def.along === 'x' ? half : 0);
+    const cz = this.def.hinge[1] + (this.def.along === 'z' ? half : 0);
+    return Math.hypot(x - cx, z - cz);
+  }
+
+  toggle(): void {
+    this.target = this.openness > 0.5 ? 0 : 1;
+  }
+
+  update(dt: number): void {
+    const step = dt / TUNING.door.swingSeconds;
+    if (this.openness < this.target) this.openness = Math.min(this.target, this.openness + step);
+    else this.openness = Math.max(this.target, this.openness - step);
+    this.applyRotation();
+  }
+
+  private applyRotation(): void {
+    this.pivot.rotation.y = this.closedYaw + this.def.swingSign * this.openness * TUNING.door.openAngleDeg * DEG;
+  }
+}
