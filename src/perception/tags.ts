@@ -1,10 +1,10 @@
 import type { Mesh, Vector3 } from 'three';
 
 // The shared sensory tag system. Every perceivable object carries these.
-// Phase 0 uses sight only; sound and smell tags arrive in Phase 1.
 export interface SenseTags {
   sight: boolean; // can be seen
   blocksSight: boolean; // stops lines of sight (walls, doors, furniture)
+  sound?: { radius: number }; // makes sound that can be heard up to `radius` metres away
 }
 
 export type Kind = 'floor' | 'wall' | 'furniture' | 'door' | 'prop';
@@ -19,6 +19,6 @@ export interface Perceivable {
   samples: Vector3[]; // same points in world space
 
   // Written by the perception engine each frame; read by rendering.
-  sensed: { sight: boolean };
-  present: boolean; // does this object exist right now?
+  sensed: { sight: boolean; sound: boolean };
+  present: boolean; // does this object exist right now? (seen; heard-only shows hazy in the replay)
 }

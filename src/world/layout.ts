@@ -28,13 +28,16 @@ export const SPAWN = { x: mx(1110), z: mz(1185), yaw: Math.PI / 4 };
 // How far you can walk: the sidewalk's full width, back to the rear fence.
 export const BOUNDS: Rect = rectPx(0, 230, 1918, 1790);
 
+// The open-plan kitchen + living area (the dog barks when he first walks in).
+export const LIVING_AREA: Rect = rectPx(504, 589, 897, 1350);
+
 const FENCE_HEIGHT = 1.8;
 const HEDGE_HEIGHT = 1.5;
 const HEDGE_PIECE = 2.0;
 
 export const FLOORS: FloorDef[] = [
   // Inside
-  { id: 'living_floor', rect: rectPx(504, 589, 897, 1350), outdoor: false }, // kitchen + living, open plan
+  { id: 'living_floor', rect: LIVING_AREA, outdoor: false }, // kitchen + living, open plan
   { id: 'hall_floor', rect: rectPx(897, 893, 1088, 1043), outdoor: false },
   { id: 'bed2_floor', rect: rectPx(990, 589, 1376, 893), outdoor: false },
   { id: 'bath_floor', rect: rectPx(1088, 893, 1376, 1043), outdoor: false },

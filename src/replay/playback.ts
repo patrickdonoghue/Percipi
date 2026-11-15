@@ -1,7 +1,7 @@
 import type { Perceivable } from '../perception/tags';
 import { TUNING } from '../tuning';
 import type { Door } from '../world/door';
-import { isSensed, type Frame } from './recorder';
+import { bit, type Frame } from './recorder';
 
 // Steps through the recording. It only reads recorded frames: the replay
 // never runs the perception engine itself.
@@ -60,7 +60,9 @@ export class Playback {
   // Put the world into the recorded state: what existed, and door positions.
   apply(frame: Frame): void {
     this.items.forEach((p, i) => {
-      p.present = isSensed(frame, i);
+      p.present = bit(frame.seen, i);
+      p.sensed.sight = p.present;
+      p.sensed.sound = bit(frame.heard, i);
     });
     this.applyDoors(frame);
   }

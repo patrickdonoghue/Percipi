@@ -1,12 +1,11 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { TUNING } from './tuning';
 import { DesktopInput } from './input/desktop';
-import { DoorPrompt } from './input/doorPrompt';
+import { InteractPrompt, type Interactable } from './input/interactPrompt';
 import { GyroInput } from './input/gyro';
 import { combineMoves, type Head } from './input/head';
 import { TouchInput } from './input/touch';
 import { Player } from './player';
-import type { Door } from './world/door';
 import type { GreyboxWorld } from './world/greybox';
 
 // First-person walk: input moves the body and turns the head; the camera is his head.
@@ -17,7 +16,8 @@ export class PovMode {
   private readonly desktop: DesktopInput;
   private readonly touch: TouchInput;
   private readonly gyro: GyroInput;
-  private readonly doorPrompt: DoorPrompt;
+  private readonly prompt: InteractPrompt;
+  private interactables: Interactable[] = [];
   private enabled = true;
   private readonly forwardVec = new Vector3();
 
@@ -30,10 +30,11 @@ export class PovMode {
     this.camera.rotation.order = 'YXZ';
     this.head = { yaw: world.spawn.yaw, pitch: 0 };
     this.player = new Player(world.spawn.x, world.spawn.z);
-    this.desktop = new DesktopInput(canvas, this.head, () => this.toggleNearestDoor());
+    this.desktop = new DesktopInput(canvas, this.head, () => this.useNearest());
     this.touch = new TouchInput(canvas, this.head);
     this.gyro = new GyroInput(this.head);
-    this.doorPrompt = new DoorPrompt(() => this.toggleNearestDoor());
+    this.prompt = new InteractPrompt(() => this.useNearest());
+    this.interactables = [...world.doors];
     this.placeCamera();
   }
 
@@ -42,7 +43,12 @@ export class PovMode {
     this.desktop.enabled = on;
     this.touch.enabled = on;
     this.gyro.enabled = on;
-    if (!on) this.doorPrompt.update(null);
+    if (!on) this.prompt.update(null);
+  }
+
+  // Things that can be used with E / the on-screen button (doors are added already).
+  addInteractable(thing: Interactable): void {
+    this.interactables.push(thing);
   }
 
   // Call from inside the wake-up tap (iPhone permission rule).
@@ -64,10 +70,7 @@ export class PovMode {
     this.player.update(dt, this.head.yaw, move, this.world.colliders, this.world.bounds);
     for (const d of this.world.doors) d.update(dt);
     this.placeCamera();
-    if (this.enabled) {
-      const door = this.nearestDoor();
-      this.doorPrompt.update(door === null ? null : door.openFraction > 0.5 ? 'close' : 'open');
-    }
+    if (this.enabled) this.prompt.update(this.nearest()?.label ?? null);
   }
 
   resize(aspect: number): void {
@@ -80,21 +83,23 @@ export class PovMode {
     this.camera.rotation.set(this.head.pitch, this.head.yaw, 0);
   }
 
-  private nearestDoor(): Door | null {
+  // The closest usable thing within reach.
+  private nearest(): Interactable | null {
     const { x, z } = this.player;
-    let best: Door | null = null;
+    let best: Interactable | null = null;
     let bestDist: number = TUNING.door.interactDistance;
-    for (const d of this.world.doors) {
-      const dist = d.distanceTo(x, z);
+    for (const thing of this.interactables) {
+      if (thing.label === null) continue;
+      const dist = thing.distanceTo(x, z);
       if (dist <= bestDist) {
-        best = d;
+        best = thing;
         bestDist = dist;
       }
     }
     return best;
   }
 
-  private toggleNearestDoor(): void {
-    this.nearestDoor()?.toggle();
+  private useNearest(): void {
+    this.nearest()?.activate();
   }
 }

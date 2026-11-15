@@ -1,14 +1,17 @@
 import './style.css';
 import { AmbientLight, Clock, DirectionalLight, Scene, WebGLRenderer } from 'three';
 import { TUNING } from './tuning';
+import { AudioOut } from './audio/audioOut';
 import { Hud } from './hud';
 import { PerceptionEngine } from './perception/engine';
+import { SoundField } from './perception/sound';
 import { PovMode } from './pov';
 import { DissolveRenderer } from './render/dissolve';
 import { Recorder } from './replay/recorder';
 import { ReplayMode } from './replay/replayMode';
 import { createEndButton } from './replay/ui';
 import { setupWake } from './wake';
+import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
 
 const renderer = new WebGLRenderer({ antialias: true });
@@ -29,11 +32,16 @@ scene.add(fill);
 const world = buildGreybox();
 scene.add(world.root);
 
-const engine = new PerceptionEngine(world.items);
+const soundField = new SoundField(world.items);
+const engine = new PerceptionEngine(world.items, soundField);
 const dissolve = new DissolveRenderer();
 const recorder = new Recorder();
+const audio = new AudioOut();
+const director = new Director(world, audio, soundField, recorder);
 const hud = new Hud();
 const pov = new PovMode(canvas, world);
+pov.addInteractable(director.alarmSwitch);
+let walkTime = 0; // seconds since waking
 let replay: ReplayMode | null = null;
 
 // wake -> pov (walk, recording) -> replay (zoom-out reveal, then playback)
@@ -45,6 +53,7 @@ const endWalk = () => {
   wake.disable();
   endButton.hide();
   pov.inputEnabled = false;
+  director.stopAll();
   if (document.pointerLockElement) document.exitPointerLock();
   replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, world, dissolve);
 };
@@ -59,13 +68,17 @@ const wake = setupWake(
   () => {
     mode = 'pov';
     endButton.show();
+    director.start(walkTime);
   },
-  () => pov.requestGyro(),
+  (isTouch) => {
+    audio.unlock(); // browsers allow sound only from inside a tap/click
+    if (isTouch) pov.requestGyro();
+  },
 );
 
 // Dev-only handle for testing from the browser console.
 if (import.meta.env.DEV) {
-  Object.assign(window, { percipi: { pov, world, engine, recorder, renderer, scene, endWalk, getReplay: () => replay } });
+  Object.assign(window, { percipi: { pov, world, engine, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
 }
 
 window.addEventListener('resize', () => {
@@ -81,11 +94,14 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), TUNING.maxFrameSeconds);
 
   if (mode === 'pov') {
+    walkTime += dt;
     pov.update(dt);
     scene.updateMatrixWorld();
+    director.update(walkTime, pov.player.x, pov.player.z);
+    audio.setListener(pov.camera.position, pov.forward());
     // The engine decides what he senses; it is recorded, not shown. POV looks normal.
-    engine.update(pov.camera.position, pov.forward());
-    recorder.capture(dt, pov.pose, world.doors, world.items);
+    engine.update(pov.camera.position, pov.forward(), walkTime);
+    recorder.capture(walkTime, pov.pose, world.doors, world.items);
     dissolve.showAll(world.items);
     if (recorder.duration >= TUNING.replay.maxRecordSeconds) endWalk();
   } else if (mode === 'replay' && replay) {
@@ -94,7 +110,11 @@ renderer.setAnimationLoop(() => {
 
   renderer.render(scene, replay ? replay.activeCamera : pov.camera);
 
-  let sensed = 0;
-  for (const p of world.items) if (p.present) sensed++;
-  hud.frame(dt, renderer.info.render.calls, renderer.info.render.triangles, sensed, world.items.length);
+  let seen = 0;
+  let heard = 0;
+  for (const p of world.items) {
+    if (p.present) seen++;
+    if (p.sensed.sound) heard++;
+  }
+  hud.frame(dt, renderer.info.render.calls, renderer.info.render.triangles, seen, heard, world.items.length);
 });

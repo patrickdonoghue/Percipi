@@ -4,7 +4,7 @@
 export function setupWake(
   canvas: HTMLCanvasElement,
   onWake: () => void,
-  onTap: () => void, // runs inside the tap itself (for permission prompts)
+  onTap: (isTouch: boolean) => void, // runs inside the tap/click itself (audio unlock, gyro permission)
 ): { disable: () => void } {
   const overlay = document.getElementById('wake')!;
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
@@ -28,6 +28,7 @@ export function setupWake(
     // Some browsers/embeds refuse pointer lock; drag-to-look still works then.
     const req = canvas.requestPointerLock() as unknown as Promise<void> | undefined;
     req?.catch(() => {});
+    if (!awake) onTap(false);
     wakeUp();
   });
 
@@ -35,7 +36,7 @@ export function setupWake(
   // the motion-permission prompt.
   // (A mouse click never lands here: the overlay is already hidden on press.)
   overlay.addEventListener('click', () => {
-    if (!awake) onTap();
+    if (!awake) onTap(true);
     wakeUp();
   });
 

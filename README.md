@@ -27,6 +27,12 @@ The green numbers top-left are the performance HUD (FPS, draw calls, triangles, 
 
 Every push to `main` publishes the site to GitHub Pages (see `.github/workflows/deploy.yml`): https://patrickdonoghue.github.io/Percipi/
 
+## Sound (Phase 1)
+
+- The alarm clock by the bed rings when you wake; walk up to it and press **E** (or tap **Turn off alarm**).
+- The dog in the backyard barks a few times the first time you walk into the kitchen/living area.
+- Sounds are placeholders made in code. To use real recordings, add `public/audio/alarm.mp3` (a seamless 1-second loop works best) and `public/audio/bark.mp3` (one bark); `.ogg` also works. They're picked up automatically.
+
 ## Tuning
 
 Every adjustable number (dissolve speed, view cone, walk speed, colours…) is in `src/tuning.ts`.

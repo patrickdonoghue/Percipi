@@ -1,6 +1,13 @@
-// Shows when a door is within reach: a tappable button on phones,
+// Something within reach that can be used (a door, the alarm clock).
+export interface Interactable {
+  distanceTo(x: number, z: number): number;
+  readonly label: string | null; // what using it would do, or null if it can't be used now
+  activate(): void;
+}
+
+// Shows when something usable is within reach: a tappable button on phones,
 // a key hint ("E") on desktop.
-export class DoorPrompt {
+export class InteractPrompt {
   private readonly el: HTMLButtonElement;
   private readonly isTouch = window.matchMedia('(pointer: coarse)').matches;
   private shown: string | null = null;
@@ -13,9 +20,8 @@ export class DoorPrompt {
     document.body.appendChild(this.el);
   }
 
-  // `state`: what pressing would do, or null when no door is near.
-  update(state: 'open' | 'close' | null): void {
-    const text = state === null ? null : `${this.isTouch ? '' : 'E: '}${state === 'open' ? 'Open' : 'Close'} door`;
+  update(label: string | null): void {
+    const text = label === null ? null : `${this.isTouch ? '' : 'E: '}${label}`;
     if (text === this.shown) return;
     this.shown = text;
     this.el.style.display = text === null ? 'none' : '';

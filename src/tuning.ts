@@ -98,6 +98,27 @@ export const TUNING = {
     biasSlope: 0.004, // extra tolerance per metre of distance
   },
 
+  sound: {
+    rippleSpeed: 12, // m/s that sound ripples spread (slower than real sound, so the replay can show it)
+    hearHoldSeconds: 1.1, // how long a sound counts as "heard" after a ripple reaches him
+    masterVolume: 0.8,
+    refDistance: 1.5, // metres at which a sound plays at full volume
+    rolloff: 1.0, // how fast volume falls with distance
+    alarm: {
+      radius: 14, // metres: beyond this he can't hear it
+      volume: 0.35,
+      pulseSeconds: 1.0, // one ripple per ring cycle
+      beepHz: 2100,
+    },
+    dog: {
+      radius: 30,
+      volume: 0.9,
+      barkCount: 3,
+      barkSpacing: 0.65, // seconds between barks
+      startDelay: 0.4, // seconds after entering the living area
+    },
+  },
+
   replay: {
     fovDeg: 30, // narrow lens so the view reads as isometric
     azimuthDeg: 45, // camera direction around the house

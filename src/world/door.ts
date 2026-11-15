@@ -1,5 +1,6 @@
 import { Group } from 'three';
 import { DEG, TUNING } from '../tuning';
+import type { Interactable } from '../input/interactPrompt';
 import type { Perceivable } from '../perception/tags';
 import { colorFor, makeBoxMesh, makePerceivable } from './build';
 
@@ -22,7 +23,7 @@ export interface DoorDef {
 }
 
 // A door that swings on its hinge. It is perceivable (and blocks sight) like any wall.
-export class Door {
+export class Door implements Interactable {
   readonly pivot = new Group();
   readonly item: Perceivable;
   private openness: number = TUNING.door.startOpenFraction;
@@ -61,6 +62,14 @@ export class Door {
     this.openness = v;
     this.target = v;
     this.applyRotation();
+  }
+
+  get label(): string {
+    return this.openness > 0.5 ? 'Close door' : 'Open door';
+  }
+
+  activate(): void {
+    this.toggle();
   }
 
   toggle(): void {
