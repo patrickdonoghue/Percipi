@@ -90,14 +90,23 @@ function uniformOf(p: Perceivable): DissolveUniform {
 
 // Reads the perception engine's output and animates each object's dissolve.
 export class DissolveRenderer {
-  update(items: readonly Perceivable[], dt: number): void {
+  // POV: the world looks normal, everything fully solid.
+  showAll(items: readonly Perceivable[]): void {
+    for (const p of items) {
+      uniformOf(p).value = 0;
+      p.mesh.visible = true;
+    }
+  }
+
+  // Replay: animate each object towards what was sensed. `hidden` skips dollhouse-cut pieces.
+  update(items: readonly Perceivable[], dt: number, hidden?: (p: Perceivable) => boolean): void {
     const { appearSeconds, vanishSeconds } = TUNING.dissolve;
     for (const p of items) {
       const u = uniformOf(p);
       if (p.present) u.value = Math.max(0, u.value - dt / appearSeconds);
       else u.value = Math.min(1, u.value + dt / vanishSeconds);
       // Fully dissolved objects are skipped entirely (saves draw calls).
-      p.mesh.visible = u.value < 1;
+      p.mesh.visible = u.value < 1 && !(hidden?.(p) ?? false);
     }
   }
 }

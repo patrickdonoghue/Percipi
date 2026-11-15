@@ -52,6 +52,17 @@ export class Door {
     return Math.hypot(x - cx, z - cz);
   }
 
+  get openFraction(): number {
+    return this.openness;
+  }
+
+  // Used by the replay to put the door exactly where it was.
+  setOpenFraction(v: number): void {
+    this.openness = v;
+    this.target = v;
+    this.applyRotation();
+  }
+
   toggle(): void {
     this.target = this.openness > 0.5 ? 0 : 1;
   }

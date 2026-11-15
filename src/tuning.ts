@@ -83,6 +83,32 @@ export const TUNING = {
     updateIntervalSeconds: 0.5,
   },
 
+  replay: {
+    fovDeg: 30, // narrow lens so the view reads as isometric
+    azimuthDeg: 45, // camera direction around the house
+    elevationDeg: 40, // camera height angle above the ground
+    distance: 22, // metres from the character
+    followSmoothing: 2.5, // how quickly the camera keeps up with him (higher = tighter)
+    zoomSeconds: 2.8, // pull-out from the head to the isometric view
+    holdSeconds: 1.2, // pause on the "reveal" before playback starts
+    wallCutHeight: 1.1, // dollhouse: walls are shown this tall in the replay
+    playbackSpeed: 1,
+    maxRecordSeconds: 1200, // walk ends automatically after this long (safety cap)
+    minDistance: 6,
+    maxDistance: 90,
+    maxPolarDeg: 82, // stop the camera going below the ground
+  },
+
+  character: {
+    bodyRadius: 0.2,
+    bodyHeight: 1.45,
+    headRadius: 0.13,
+    color: 0xf0b37e,
+    gazeLength: 1.2, // faint cone showing where he is looking
+    gazeRadius: 0.35,
+    gazeOpacity: 0.22,
+  },
+
   maxFrameSeconds: 0.1, // clamp long frames (tab switch) so nothing jumps
 } as const;
 

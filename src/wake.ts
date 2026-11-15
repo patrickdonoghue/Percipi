@@ -1,11 +1,12 @@
 // The "tap to wake up" screen. This same tap will later unlock audio (Phase 1)
 // and request iOS gyro permission. On desktop it also captures the mouse.
-export function setupWake(canvas: HTMLCanvasElement, onWake: () => void): void {
+export function setupWake(canvas: HTMLCanvasElement, onWake: () => void): { disable: () => void } {
   const overlay = document.getElementById('wake')!;
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
   overlay.textContent = isTouch ? 'tap to wake up' : 'click to wake up';
   let awake = false;
   let usedMouse = false;
+  let disabled = false;
 
   overlay.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'mouse') {
@@ -22,9 +23,16 @@ export function setupWake(canvas: HTMLCanvasElement, onWake: () => void): void {
   });
 
   document.addEventListener('pointerlockchange', () => {
-    if (usedMouse && document.pointerLockElement !== canvas) {
+    if (!disabled && usedMouse && document.pointerLockElement !== canvas) {
       overlay.textContent = 'click to continue';
       overlay.classList.remove('hidden');
     }
   });
+
+  return {
+    disable: () => {
+      disabled = true;
+      overlay.classList.add('hidden');
+    },
+  };
 }

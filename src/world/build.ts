@@ -29,6 +29,7 @@ export function defaultTags(kind: Kind): SenseTags {
 
 export function makePerceivable(id: string, kind: Kind, mesh: Mesh, dynamic = false): Perceivable {
   mesh.name = id;
+  mesh.visible = false; // nothing is drawn until the walk begins
   return {
     id,
     kind,

@@ -12,7 +12,7 @@ export class Hud {
     if (this.elapsed < TUNING.hud.updateIntervalSeconds) return;
     const fps = Math.round(this.frames / this.elapsed);
     this.el.textContent =
-      `FPS ${fps}\n` + `Draw calls ${drawCalls}\n` + `Triangles ${triangles}\n` + `Perceived ${present}/${total}`;
+      `FPS ${fps}\n` + `Draw calls ${drawCalls}\n` + `Triangles ${triangles}\n` + `Sensed ${present}/${total}`;
     this.frames = 0;
     this.elapsed = 0;
   }

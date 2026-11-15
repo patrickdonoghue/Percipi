@@ -1,13 +1,13 @@
 import './style.css';
-import { AmbientLight, Clock, DirectionalLight, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Clock, DirectionalLight, Scene, WebGLRenderer } from 'three';
 import { TUNING } from './tuning';
 import { Hud } from './hud';
-import { DesktopInput } from './input/desktop';
-import { combineMoves, type Head } from './input/head';
-import { TouchInput } from './input/touch';
 import { PerceptionEngine } from './perception/engine';
-import { Player } from './player';
+import { PovMode } from './pov';
 import { DissolveRenderer } from './render/dissolve';
+import { Recorder } from './replay/recorder';
+import { ReplayMode } from './replay/replayMode';
+import { createEndButton } from './replay/ui';
 import { setupWake } from './wake';
 import { buildGreybox } from './world/greybox';
 
@@ -18,10 +18,6 @@ const canvas = renderer.domElement;
 document.getElementById('app')!.appendChild(canvas);
 
 const scene = new Scene();
-const cam = TUNING.camera;
-const camera = new PerspectiveCamera(cam.fovDeg, window.innerWidth / window.innerHeight, cam.near, cam.far);
-camera.rotation.order = 'YXZ';
-
 scene.add(new AmbientLight(0xffffff, TUNING.render.ambientIntensity));
 const sun = new DirectionalLight(0xffffff, TUNING.render.sunIntensity);
 sun.position.set(...TUNING.render.sunPosition);
@@ -35,57 +31,66 @@ scene.add(world.root);
 
 const engine = new PerceptionEngine(world.items);
 const dissolve = new DissolveRenderer();
+const recorder = new Recorder();
 const hud = new Hud();
+const pov = new PovMode(canvas, world);
+let replay: ReplayMode | null = null;
 
-const head: Head = { yaw: world.spawn.yaw, pitch: 0 };
-const player = new Player(world.spawn.x, world.spawn.z);
+// wake -> pov (walk, recording) -> replay (zoom-out reveal, then playback)
+let mode: 'wake' | 'pov' | 'replay' = 'wake';
 
-const toggleNearestDoor = () => {
-  let best = world.doors[0];
-  for (const d of world.doors) if (d.distanceTo(player.x, player.z) < best!.distanceTo(player.x, player.z)) best = d;
-  if (best && best.distanceTo(player.x, player.z) <= TUNING.door.interactDistance) best.toggle();
+const endWalk = () => {
+  if (mode !== 'pov' || recorder.frames.length === 0) return;
+  mode = 'replay';
+  wake.disable();
+  endButton.hide();
+  pov.inputEnabled = false;
+  if (document.pointerLockElement) document.exitPointerLock();
+  replay = new ReplayMode(scene, pov.camera, canvas, recorder.frames, world, dissolve);
 };
-const desktop = new DesktopInput(canvas, head, toggleNearestDoor);
-const touch = new TouchInput(canvas, head);
 
-// Dev-only handle for testing from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { percipi: { head, player, world, engine, camera, renderer, scene } });
-
-let awake = false;
-setupWake(canvas, () => {
-  awake = true;
+const endButton = createEndButton(endWalk);
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Enter') endWalk();
 });
 
+const wake = setupWake(canvas, () => {
+  mode = 'pov';
+  endButton.show();
+});
+
+// Dev-only handle for testing from the browser console.
+if (import.meta.env.DEV) {
+  Object.assign(window, { percipi: { pov, world, engine, recorder, renderer, scene, endWalk, getReplay: () => replay } });
+}
+
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  const aspect = window.innerWidth / window.innerHeight;
+  pov.resize(aspect);
+  replay?.resize(aspect);
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 const clock = new Clock();
-const forward = new Vector3();
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), TUNING.maxFrameSeconds);
 
-  if (awake) {
-    desktop.update();
-    player.update(dt, head.yaw, combineMoves(desktop.move, touch.move), world.colliders, world.bounds);
+  if (mode === 'pov') {
+    pov.update(dt);
+    scene.updateMatrixWorld();
+    // The engine decides what he senses; it is recorded, not shown. POV looks normal.
+    engine.update(pov.camera.position, pov.forward());
+    recorder.capture(dt, pov.pose, world.doors, world.items);
+    dissolve.showAll(world.items);
+    if (recorder.duration >= TUNING.replay.maxRecordSeconds) endWalk();
+  } else if (mode === 'replay' && replay) {
+    replay.update(dt);
   }
-  for (const d of world.doors) d.update(dt);
 
-  camera.position.set(player.x, TUNING.player.eyeHeight, player.z);
-  camera.rotation.set(head.pitch, head.yaw, 0);
-  scene.updateMatrixWorld();
-  camera.getWorldDirection(forward);
+  renderer.render(scene, replay ? replay.activeCamera : pov.camera);
 
-  // 1. Perception decides what exists. 2. Rendering only reads that.
-  if (awake) engine.update(camera.position, forward);
-  dissolve.update(world.items, dt);
-
-  renderer.render(scene, camera);
-
-  let present = 0;
-  for (const p of world.items) if (p.present) present++;
-  hud.frame(dt, renderer.info.render.calls, renderer.info.render.triangles, present, world.items.length);
+  let sensed = 0;
+  for (const p of world.items) if (p.present) sensed++;
+  hud.frame(dt, renderer.info.render.calls, renderer.info.render.triangles, sensed, world.items.length);
 });

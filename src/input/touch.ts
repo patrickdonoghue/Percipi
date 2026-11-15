@@ -5,11 +5,18 @@ import { applyLook, type Head, type MoveVector } from './head';
 // (Gyro look joins this in a later step.)
 export class TouchInput {
   readonly move: MoveVector = { x: 0, y: 0 };
+  private enabledFlag = true;
   private joyId: number | null = null;
   private joyOrigin = { x: 0, y: 0 };
   private lookId: number | null = null;
   private lookLast = { x: 0, y: 0 };
   private readonly ring: HTMLDivElement;
+  private endAll: () => void = () => {};
+
+  set enabled(on: boolean) {
+    this.enabledFlag = on;
+    if (!on) this.endAll();
+  }
 
   constructor(canvas: HTMLCanvasElement, head: Head) {
     this.ring = document.createElement('div');
@@ -17,7 +24,7 @@ export class TouchInput {
     document.body.appendChild(this.ring);
 
     canvas.addEventListener('pointerdown', (e) => {
-      if (e.pointerType !== 'touch') return;
+      if (!this.enabledFlag || e.pointerType !== 'touch') return;
       canvas.setPointerCapture(e.pointerId);
       if (e.clientX < window.innerWidth / 2 && this.joyId === null) {
         this.joyId = e.pointerId;
@@ -58,6 +65,13 @@ export class TouchInput {
       } else if (e.pointerId === this.lookId) {
         this.lookId = null;
       }
+    };
+    this.endAll = () => {
+      this.joyId = null;
+      this.lookId = null;
+      this.move.x = 0;
+      this.move.y = 0;
+      this.ring.style.display = 'none';
     };
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
