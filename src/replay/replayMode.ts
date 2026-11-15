@@ -1,12 +1,14 @@
-import { Camera, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
+import { Camera, DoubleSide, Material, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DEG, TUNING } from '../tuning';
 import type { DissolveRenderer } from '../render/dissolve';
+import { PixelSight, pixelSightUniforms } from '../perception/pixelSight';
 import type { GreyboxWorld } from '../world/greybox';
 import { Character } from './character';
 import { Dollhouse } from './dollhouse';
 import { Playback } from './playback';
 import type { Frame } from './recorder';
+import { SightHistory } from './sightHistory';
 import { ReplayBar } from './ui';
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -20,6 +22,7 @@ export class ReplayMode {
   private readonly dollhouse: Dollhouse;
   private readonly playback: Playback;
   private readonly bar: ReplayBar;
+  private readonly history: SightHistory | null = null; // per-pixel sight (null = per-object fallback)
   private phase: 'zoom' | 'hold' | 'play' = 'zoom';
   private phaseTime = 0;
 
@@ -32,6 +35,7 @@ export class ReplayMode {
   private readonly follow = new Vector3();
 
   constructor(
+    renderer: WebGLRenderer,
     scene: Scene,
     povCamera: PerspectiveCamera,
     canvas: HTMLCanvasElement,
@@ -81,7 +85,21 @@ export class ReplayMode {
       this.playback.apply(last);
       this.character.setPose(last.x, last.z, last.yaw, last.pitch);
     }
+    this.character.root.visible = false;
     scene.add(this.character.root);
+
+    if (TUNING.pixelSight.enabled) {
+      this.history = new SightHistory(new PixelSight(renderer, scene), this.playback, world, this.dollhouse, this.character);
+      pixelSightUniforms.uPixelMode.value = 1;
+      pixelSightUniforms.uSolid.value = 1; // start solid; the reveal dissolves everything unseen
+      // Only the faces he saw survive, so draw both sides: a wall seen from the
+      // far side still shows the face he looked at.
+      for (const p of world.items) {
+        const mat = p.mesh.material as Material;
+        mat.side = DoubleSide;
+        mat.needsUpdate = true;
+      }
+    }
   }
 
   get activeCamera(): Camera {
@@ -99,6 +117,8 @@ export class ReplayMode {
       this.camera.fov = this.startFov + (r.fovDeg - this.startFov) * k;
       this.camera.updateProjectionMatrix();
       this.dollhouse.setCut(k);
+      // The camera starts inside his head: show the figure once we've pulled away.
+      this.character.root.visible = k >= r.figureAppearAt;
       if (this.phaseTime >= r.zoomSeconds) this.enter('hold');
     } else if (this.phase === 'hold') {
       if (this.phaseTime >= r.holdSeconds) {
@@ -120,7 +140,20 @@ export class ReplayMode {
       this.bar.update(this.playback.time, this.playback.playing);
     }
 
-    this.dissolve.update(this.world.items, dt, this.dollhouse.isHidden);
+    if (this.history) {
+      // Per-pixel: the recorded eyes decide every pixel; cheap culling skips the rest.
+      const solid = pixelSightUniforms.uSolid;
+      solid.value = Math.max(0, solid.value - dt / TUNING.dissolve.vanishSeconds);
+      const t = this.phase === 'play' ? this.playback.time : this.playback.duration;
+      this.history.update(t);
+      const history = this.history;
+      this.dissolve.showPerPixel(
+        this.world.items,
+        (p) => !this.dollhouse.isHidden(p) && (solid.value > 0 || history.isDrawable(p)),
+      );
+    } else {
+      this.dissolve.update(this.world.items, dt, this.dollhouse.isHidden);
+    }
   }
 
   resize(aspect: number): void {

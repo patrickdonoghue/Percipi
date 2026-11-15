@@ -46,7 +46,7 @@ const endWalk = () => {
   endButton.hide();
   pov.inputEnabled = false;
   if (document.pointerLockElement) document.exitPointerLock();
-  replay = new ReplayMode(scene, pov.camera, canvas, recorder.frames, world, dissolve);
+  replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, world, dissolve);
 };
 
 const endButton = createEndButton(endWalk);

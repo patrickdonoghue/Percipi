@@ -85,6 +85,18 @@ export const TUNING = {
     updateIntervalSeconds: 0.5,
   },
 
+  // Per-pixel sight (replay): his recorded eyes act like a light source.
+  // A pixel exists only if it was in his line of sight recently.
+  pixelSight: {
+    enabled: true, // false = fall back to per-object sight in the replay
+    slots: 8, // recent snapshots kept; slots x interval should cover vanishSeconds
+    intervalSeconds: 0.1, // time between kept snapshots
+    tileSize: 512, // snapshot resolution (pixels per side)
+    near: 0.1, // metres
+    biasMetres: 0.04, // tolerance so surfaces don't hide themselves
+    biasSlope: 0.004, // extra tolerance per metre of distance
+  },
+
   replay: {
     fovDeg: 30, // narrow lens so the view reads as isometric
     azimuthDeg: 45, // camera direction around the house
@@ -93,6 +105,7 @@ export const TUNING = {
     followSmoothing: 2.5, // how quickly the camera keeps up with him (higher = tighter)
     zoomSeconds: 2.8, // pull-out from the head to the isometric view
     holdSeconds: 1.2, // pause on the "reveal" before playback starts
+    figureAppearAt: 0.15, // fraction of the pull-out after which his figure is shown
     wallCutHeight: 1.1, // dollhouse: walls are shown this tall in the replay
     playbackSpeed: 1,
     maxRecordSeconds: 1200, // walk ends automatically after this long (safety cap)

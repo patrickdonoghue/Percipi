@@ -23,8 +23,19 @@ export class Dollhouse {
       }));
   }
 
+  private amount = 0;
+
+  // Temporarily restore full-height walls (sight snapshots must see real walls).
+  withFullWalls(fn: () => void): void {
+    const keep = this.amount;
+    this.setCut(0);
+    fn();
+    this.setCut(keep);
+  }
+
   // 0 = full height (POV), 1 = fully cut (replay).
   setCut(amount: number): void {
+    this.amount = amount;
     const full = TUNING.house.wallHeight;
     const h = full + (TUNING.replay.wallCutHeight - full) * amount;
     this.hiddenSet.clear();

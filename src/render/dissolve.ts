@@ -1,6 +1,7 @@
 import { Color, MeshStandardMaterial } from 'three';
 import { TUNING } from '../tuning';
 import type { Perceivable } from '../perception/tags';
+import { PIXEL_SIGHT_GLSL, pixelSightUniforms } from '../perception/pixelSight';
 
 // The dissolve shader is the only way objects appear or disappear.
 // uDissolve: 0 = fully present, 1 = fully gone.
@@ -54,6 +55,7 @@ export function createDissolveMaterial(color: number): MeshStandardMaterial {
     shader.uniforms.uNoiseLow = { value: d.noiseLow };
     shader.uniforms.uNoiseHigh = { value: d.noiseHigh };
     shader.uniforms.uEdgeColor = { value: new Color(...d.edgeColor) };
+    Object.assign(shader.uniforms, pixelSightUniforms);
 
     shader.vertexShader =
       'varying vec3 vDissolvePos;\n' +
@@ -64,14 +66,17 @@ export function createDissolveMaterial(color: number): MeshStandardMaterial {
 
     shader.fragmentShader =
       DISSOLVE_GLSL +
+      PIXEL_SIGHT_GLSL +
       shader.fragmentShader
         .replace(
           '#include <clipping_planes_fragment>',
           `#include <clipping_planes_fragment>
+          // Per-pixel replay: each point's own seen/fade state. Otherwise per object.
+          float dAmt = uPixelMode > 0.5 ? pixelDissolve(vDissolvePos) * (1.0 - uSolid) : uDissolve;
           float dN = dFbm(vDissolvePos * uNoiseScale);
-          float dT = uDissolve <= 0.0 ? -1.0 : (uDissolve >= 1.0 ? 2.0 : mix(uNoiseLow, uNoiseHigh, uDissolve));
+          float dT = dAmt <= 0.0 ? -1.0 : (dAmt >= 1.0 ? 2.0 : mix(uNoiseLow, uNoiseHigh, dAmt));
           if (dN < dT) discard;
-          float dEdge = uDissolve > 0.0 ? 1.0 - smoothstep(0.0, uEdgeWidth, dN - dT) : 0.0;`,
+          float dEdge = dAmt > 0.0 ? 1.0 - smoothstep(0.0, uEdgeWidth, dN - dT) : 0.0;`,
         )
         .replace(
           '#include <emissivemap_fragment>',
@@ -95,6 +100,15 @@ export class DissolveRenderer {
     for (const p of items) {
       uniformOf(p).value = 0;
       p.mesh.visible = true;
+    }
+  }
+
+  // Per-pixel replay: the shader decides each pixel; here we only skip drawing
+  // objects that cannot have been seen (saves draw calls).
+  showPerPixel(items: readonly Perceivable[], drawable: (p: Perceivable) => boolean): void {
+    for (const p of items) {
+      uniformOf(p).value = 0;
+      p.mesh.visible = drawable(p);
     }
   }
 

@@ -40,13 +40,18 @@ export class Playback {
 
   // The latest frame at or before the current time.
   currentFrame(): Frame | undefined {
+    return this.frameAt(this.time);
+  }
+
+  // The latest frame at or before time `t`.
+  frameAt(t: number): Frame | undefined {
     const f = this.frames;
     if (f.length === 0) return undefined;
     let lo = 0;
     let hi = f.length - 1;
     while (lo < hi) {
       const mid = (lo + hi + 1) >> 1;
-      if (f[mid]!.t <= this.time) lo = mid;
+      if (f[mid]!.t <= t) lo = mid;
       else hi = mid - 1;
     }
     return f[lo];
@@ -57,6 +62,10 @@ export class Playback {
     this.items.forEach((p, i) => {
       p.present = isSensed(frame, i);
     });
+    this.applyDoors(frame);
+  }
+
+  applyDoors(frame: Frame): void {
     this.doors.forEach((d, i) => d.setOpenFraction(frame.doors[i] ?? d.openFraction));
   }
 }
