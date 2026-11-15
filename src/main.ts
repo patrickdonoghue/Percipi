@@ -54,10 +54,14 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Enter') endWalk();
 });
 
-const wake = setupWake(canvas, () => {
-  mode = 'pov';
-  endButton.show();
-});
+const wake = setupWake(
+  canvas,
+  () => {
+    mode = 'pov';
+    endButton.show();
+  },
+  () => pov.requestGyro(),
+);
 
 // Dev-only handle for testing from the browser console.
 if (import.meta.env.DEV) {

@@ -18,10 +18,14 @@ A browser visualization of Berkeley's *esse est percipi*: the world exists only 
 ## Controls
 
 - **Walking, desktop:** click to wake up, WASD to walk, mouse to look, **E** opens/closes a nearby door, Esc releases the mouse, Enter ends the walk.
-- **Walking, phone:** tap to wake up, left thumb = joystick, right thumb = drag to look, **End walk** button.
+- **Walking, phone:** tap to wake up (allow motion access so turning the phone turns your head), left thumb = joystick, right thumb = drag to look, **Open door** button when near a door, **End walk** button.
 - **Replay:** drag to orbit, scroll or pinch to zoom; play/pause and scrub with the bar at the bottom; **Walk again** starts over.
 
 The green numbers top-left are the performance HUD (FPS, draw calls, triangles, objects currently sensed).
+
+## Online
+
+Every push to `main` publishes the site to GitHub Pages (see `.github/workflows/deploy.yml`): https://patrickdonoghue.github.io/Percipi/
 
 ## Tuning
 

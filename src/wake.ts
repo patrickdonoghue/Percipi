@@ -1,6 +1,11 @@
-// The "tap to wake up" screen. This same tap will later unlock audio (Phase 1)
-// and request iOS gyro permission. On desktop it also captures the mouse.
-export function setupWake(canvas: HTMLCanvasElement, onWake: () => void): { disable: () => void } {
+// The "tap to wake up" screen. On phones this tap also asks for motion
+// (gyro) permission, and in Phase 1 it will unlock audio. On desktop the
+// click captures the mouse for looking around.
+export function setupWake(
+  canvas: HTMLCanvasElement,
+  onWake: () => void,
+  onTap: () => void, // runs inside the tap itself (for permission prompts)
+): { disable: () => void } {
   const overlay = document.getElementById('wake')!;
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
   overlay.textContent = isTouch ? 'tap to wake up' : 'click to wake up';
@@ -8,18 +13,30 @@ export function setupWake(canvas: HTMLCanvasElement, onWake: () => void): { disa
   let usedMouse = false;
   let disabled = false;
 
-  overlay.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'mouse') {
-      usedMouse = true;
-      // Some browsers/embeds refuse pointer lock; drag-to-look still works then.
-      const req = canvas.requestPointerLock() as unknown as Promise<void> | undefined;
-      req?.catch(() => {});
-    }
+  const wakeUp = () => {
     overlay.classList.add('hidden');
     if (!awake) {
       awake = true;
       onWake();
     }
+  };
+
+  // Mouse: act on press, so pointer lock is allowed.
+  overlay.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    usedMouse = true;
+    // Some browsers/embeds refuse pointer lock; drag-to-look still works then.
+    const req = canvas.requestPointerLock() as unknown as Promise<void> | undefined;
+    req?.catch(() => {});
+    wakeUp();
+  });
+
+  // Touch: act on the completed tap ("click"), which iPhones require for
+  // the motion-permission prompt.
+  // (A mouse click never lands here: the overlay is already hidden on press.)
+  overlay.addEventListener('click', () => {
+    if (!awake) onTap();
+    wakeUp();
   });
 
   document.addEventListener('pointerlockchange', () => {

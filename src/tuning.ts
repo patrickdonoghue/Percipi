@@ -35,6 +35,8 @@ export const TUNING = {
     mouseSensitivity: 0.0022, // radians per pixel
     touchLookSensitivity: 0.005, // radians per pixel
     joystickRadiusPx: 60,
+    gyroEnabled: true,
+    gyroSensitivity: 1.0, // 1 = head turns exactly as much as the phone
   },
 
   camera: {
@@ -58,7 +60,7 @@ export const TUNING = {
     openAngleDeg: 100,
     swingSeconds: 0.6,
     thickness: 0.05,
-    interactDistance: 2.5,
+    interactDistance: 1.8, // metres: how close you must be to open/close a door
     startOpenFraction: 0.2, // doors start ajar to test the "crack" view
   },
 

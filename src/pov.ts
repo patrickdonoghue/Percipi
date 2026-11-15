@@ -1,9 +1,12 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { TUNING } from './tuning';
 import { DesktopInput } from './input/desktop';
+import { DoorPrompt } from './input/doorPrompt';
+import { GyroInput } from './input/gyro';
 import { combineMoves, type Head } from './input/head';
 import { TouchInput } from './input/touch';
 import { Player } from './player';
+import type { Door } from './world/door';
 import type { GreyboxWorld } from './world/greybox';
 
 // First-person walk: input moves the body and turns the head; the camera is his head.
@@ -13,6 +16,9 @@ export class PovMode {
   readonly player: Player;
   private readonly desktop: DesktopInput;
   private readonly touch: TouchInput;
+  private readonly gyro: GyroInput;
+  private readonly doorPrompt: DoorPrompt;
+  private enabled = true;
   private readonly forwardVec = new Vector3();
 
   constructor(
@@ -26,12 +32,22 @@ export class PovMode {
     this.player = new Player(world.spawn.x, world.spawn.z);
     this.desktop = new DesktopInput(canvas, this.head, () => this.toggleNearestDoor());
     this.touch = new TouchInput(canvas, this.head);
+    this.gyro = new GyroInput(this.head);
+    this.doorPrompt = new DoorPrompt(() => this.toggleNearestDoor());
     this.placeCamera();
   }
 
   set inputEnabled(on: boolean) {
+    this.enabled = on;
     this.desktop.enabled = on;
     this.touch.enabled = on;
+    this.gyro.enabled = on;
+    if (!on) this.doorPrompt.update(null);
+  }
+
+  // Call from inside the wake-up tap (iPhone permission rule).
+  requestGyro(): void {
+    this.gyro.requestPermission();
   }
 
   get pose(): { x: number; z: number; yaw: number; pitch: number } {
@@ -48,6 +64,10 @@ export class PovMode {
     this.player.update(dt, this.head.yaw, move, this.world.colliders, this.world.bounds);
     for (const d of this.world.doors) d.update(dt);
     this.placeCamera();
+    if (this.enabled) {
+      const door = this.nearestDoor();
+      this.doorPrompt.update(door === null ? null : door.openFraction > 0.5 ? 'close' : 'open');
+    }
   }
 
   resize(aspect: number): void {
@@ -60,10 +80,21 @@ export class PovMode {
     this.camera.rotation.set(this.head.pitch, this.head.yaw, 0);
   }
 
-  private toggleNearestDoor(): void {
+  private nearestDoor(): Door | null {
     const { x, z } = this.player;
-    let best = this.world.doors[0];
-    for (const d of this.world.doors) if (d.distanceTo(x, z) < best!.distanceTo(x, z)) best = d;
-    if (best && best.distanceTo(x, z) <= TUNING.door.interactDistance) best.toggle();
+    let best: Door | null = null;
+    let bestDist: number = TUNING.door.interactDistance;
+    for (const d of this.world.doors) {
+      const dist = d.distanceTo(x, z);
+      if (dist <= bestDist) {
+        best = d;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
+  private toggleNearestDoor(): void {
+    this.nearestDoor()?.toggle();
   }
 }
