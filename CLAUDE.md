@@ -46,9 +46,9 @@ Patrick is not a strong coder. Explain changes in plain language, give exact ste
 ## Phase Discipline
 
 - Work one phase at a time as defined in the PRD
-- Current phase: **Phase 0** — grey box, sight only
-- Phase 0 scope: solid POV walk, end button, recording, basic isometric replay (orbit/zoom, no roof, walls cut low)
-- Phase 0 acceptance: "after I walk around and end the exploration, the replay shows grey-box rooms dissolving in and out convincingly as he looks around"
+- Current phase: **Phase 1** — senses: sound and smell with placeholder assets
+- Phase 0 (grey box, sight only, per-pixel replay) accepted by Patrick on 2026-11-15; baseline in `docs/performance-baseline.md`
+- Patrick wants strict phase order: if he asks for a later-phase feature, say which phase it belongs to and ask before building it
 - Before moving phases: wiring check, performance HUD baseline (FPS, draw calls), feel evaluation on desktop and a real phone
 
 ## Workflow
