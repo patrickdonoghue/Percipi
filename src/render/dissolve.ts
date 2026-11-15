@@ -11,6 +11,7 @@ uniform float uDissolve;
 uniform float uNoiseScale;
 uniform float uEdgeWidth;
 uniform float uEdgeIntensity;
+uniform float uEdgeSoftness;
 uniform float uNoiseLow;
 uniform float uNoiseHigh;
 uniform vec3 uEdgeColor;
@@ -41,7 +42,9 @@ interface DissolveUniform {
   value: number;
 }
 
-export function createDissolveMaterial(color: number): MeshStandardMaterial {
+// `sightThickness`: extra per-pixel sight tolerance for solid slabs (walls, doors),
+// so the dollhouse-cut tops inside them count as seen along with their faces.
+export function createDissolveMaterial(color: number, sightThickness = 0): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({ color: new Color(color), roughness: 0.9, metalness: 0 });
   const d = TUNING.dissolve;
   const uDissolve: DissolveUniform = { value: 1 }; // start gone: nothing exists before waking
@@ -52,10 +55,12 @@ export function createDissolveMaterial(color: number): MeshStandardMaterial {
     shader.uniforms.uNoiseScale = { value: d.noiseScale };
     shader.uniforms.uEdgeWidth = { value: d.edgeWidth };
     shader.uniforms.uEdgeIntensity = { value: d.edgeIntensity };
+    shader.uniforms.uEdgeSoftness = { value: d.edgeSoftness };
     shader.uniforms.uNoiseLow = { value: d.noiseLow };
     shader.uniforms.uNoiseHigh = { value: d.noiseHigh };
     shader.uniforms.uEdgeColor = { value: new Color(...d.edgeColor) };
     Object.assign(shader.uniforms, pixelSightUniforms);
+    shader.uniforms.uSightThickness = { value: sightThickness };
 
     shader.vertexShader =
       'varying vec3 vDissolvePos;\n' +
@@ -76,7 +81,7 @@ export function createDissolveMaterial(color: number): MeshStandardMaterial {
           float dN = dFbm(vDissolvePos * uNoiseScale);
           float dT = dAmt <= 0.0 ? -1.0 : (dAmt >= 1.0 ? 2.0 : mix(uNoiseLow, uNoiseHigh, dAmt));
           if (dN < dT) discard;
-          float dEdge = dAmt > 0.0 ? 1.0 - smoothstep(0.0, uEdgeWidth, dN - dT) : 0.0;`,
+          float dEdge = dAmt > 0.0 ? pow(1.0 - smoothstep(0.0, uEdgeWidth, dN - dT), uEdgeSoftness) : 0.0;`,
         )
         .replace(
           '#include <emissivemap_fragment>',

@@ -6,9 +6,10 @@ export const TUNING = {
     appearSeconds: 0.3, // "quick splash"
     vanishSeconds: 0.7, // "slow fade"
     noiseScale: 2.5, // size of the dissolve pattern (higher = finer grain)
-    edgeWidth: 0.06, // width of the glowing edge, in noise units
-    edgeIntensity: 2.0,
-    edgeColor: [1.0, 0.82, 0.55] as const, // warm glow at the dissolve edge
+    edgeWidth: 0.12, // width of the glowing edge, in noise units (wider = softer)
+    edgeIntensity: 0.45, // brightness of the edge glow (higher blows out to white)
+    edgeSoftness: 2.0, // how quickly the glow fades into the surface (higher = gentler)
+    edgeColor: [1.0, 0.86, 0.68] as const, // warm glow at the dissolve edge
     noiseLow: 0.15, // noise range the dissolve sweeps across
     noiseHigh: 0.85,
   },

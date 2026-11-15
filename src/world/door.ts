@@ -33,7 +33,7 @@ export class Door {
     const { doorHeight } = TUNING.house;
     const { thickness } = TUNING.door;
     const height = doorHeight - 0.02;
-    const mesh = makeBoxMesh(colorFor('door'));
+    const mesh = makeBoxMesh(colorFor('door'), thickness);
     mesh.scale.set(def.width, height, thickness);
     mesh.position.set(def.width / 2, height / 2, 0);
     this.pivot.add(mesh);

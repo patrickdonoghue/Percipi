@@ -70,6 +70,7 @@ uniform float uCosHalf;
 uniform float uMaxDist;
 uniform float uSightBias;
 uniform float uSightBiasSlope;
+uniform float uSightThickness;
 uniform float uSightInterval;
 uniform float uAppear;
 uniform float uVanish;
@@ -91,7 +92,7 @@ bool sightLit(int i, vec3 p) {
   vec2 uv = (cell + ndc * 0.5 + 0.5) / vec2(uAtlasCols, uAtlasRows);
   float z = texture2D(uSightAtlas, uv).r;
   float nearest = (uSightNear * uSightFar) / (uSightFar - z * (uSightFar - uSightNear));
-  return clip.w <= nearest + uSightBias + uSightBiasSlope * clip.w;
+  return clip.w <= nearest + uSightBias + uSightBiasSlope * clip.w + uSightThickness;
 }
 
 // Slots arrive newest first. Returns 0 (fully present) .. 1 (gone).

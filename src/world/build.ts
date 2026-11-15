@@ -43,12 +43,13 @@ export function makePerceivable(id: string, kind: Kind, mesh: Mesh, dynamic = fa
   };
 }
 
-export function makeBoxMesh(color: number): Mesh {
-  return new Mesh(unitBox, createDissolveMaterial(color));
+export function makeBoxMesh(color: number, sightThickness = 0): Mesh {
+  return new Mesh(unitBox, createDissolveMaterial(color, sightThickness));
 }
 
 export function makeBox(spec: BoxSpec, outdoor = false): Perceivable {
-  const mesh = makeBoxMesh(colorFor(spec.kind, outdoor));
+  const thickness = spec.kind === 'wall' ? TUNING.house.wallThickness : 0;
+  const mesh = makeBoxMesh(colorFor(spec.kind, outdoor), thickness);
   const [x0, y0, z0] = spec.min;
   const [x1, y1, z1] = spec.max;
   mesh.scale.set(x1 - x0, y1 - y0, z1 - z0);
