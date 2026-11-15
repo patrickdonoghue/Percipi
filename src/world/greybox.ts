@@ -15,7 +15,7 @@ export interface GreyboxWorld {
   spawn: typeof SPAWN;
 }
 
-function floorTiles(id: string, r: Rect): BoxSpec[] {
+function floorTiles(id: string, r: Rect, top = 0): BoxSpec[] {
   const { floorTile: size, floorThickness: th } = TUNING.house;
   const tiles: BoxSpec[] = [];
   let i = 0;
@@ -25,7 +25,7 @@ function floorTiles(id: string, r: Rect): BoxSpec[] {
         id: `${id}_${i++}`,
         kind: 'floor',
         min: [x, -th, z],
-        max: [Math.min(x + size, r.maxX), 0, Math.min(z + size, r.maxZ)],
+        max: [Math.min(x + size, r.maxX), top, Math.min(z + size, r.maxZ)],
       });
     }
   }
@@ -52,7 +52,7 @@ export function buildGreybox(): GreyboxWorld {
     }
   };
 
-  for (const fl of FLOORS) for (const t of floorTiles(fl.id, fl.rect)) add(t, fl.outdoor);
+  for (const fl of FLOORS) for (const t of floorTiles(fl.id, fl.rect, fl.top)) add(t, fl.outdoor);
   for (const w of WALLS) for (const piece of buildWall(w)) add(piece);
   for (const spec of FURNITURE) add(spec);
 

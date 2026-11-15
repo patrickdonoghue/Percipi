@@ -49,7 +49,7 @@ const desktop = new DesktopInput(canvas, head, toggleNearestDoor);
 const touch = new TouchInput(canvas, head);
 
 // Dev-only handle for testing from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { percipi: { head, player, world, engine, camera } });
+if (import.meta.env.DEV) Object.assign(window, { percipi: { head, player, world, engine, camera, renderer, scene } });
 
 let awake = false;
 setupWake(canvas, () => {

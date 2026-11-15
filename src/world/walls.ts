@@ -15,6 +15,7 @@ export interface WallDef {
   a: [number, number]; // start (x, z)
   b: [number, number]; // end (x, z); walls must run along x or z
   gaps?: Gap[];
+  height?: number; // defaults to the house wall height (fences are lower)
 }
 
 export const doorway = (from: number, to: number): Gap => ({ from, to, bottom: 0, top: TUNING.house.doorHeight });
@@ -28,7 +29,8 @@ export const windowGap = (from: number, to: number): Gap => ({
 // Turn one wall line into box pieces: solid runs (split into short segments)
 // plus the bits below windows and above doors/windows.
 export function buildWall(def: WallDef): BoxSpec[] {
-  const { wallHeight: H, wallThickness: T, maxWallSegment } = TUNING.house;
+  const { wallThickness: T, maxWallSegment } = TUNING.house;
+  const H = def.height ?? TUNING.house.wallHeight;
   const alongX = def.a[1] === def.b[1];
   const start = alongX ? def.a[0] : def.a[1];
   const end = alongX ? def.b[0] : def.b[1];
