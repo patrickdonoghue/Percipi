@@ -31,7 +31,8 @@ Every push to `main` publishes the site to GitHub Pages (see `.github/workflows/
 
 - The alarm clock by the bed rings when you wake; walk up to it and press **E** (or tap **Turn off alarm**).
 - The dog in the backyard barks a few times the first time you walk into the kitchen/living area.
-- Sounds are placeholders made in code. To use real recordings, add `public/audio/alarm.mp3` (a seamless 1-second loop works best) and `public/audio/bark.mp3` (one bark); `.ogg` also works. They're picked up automatically.
+- Real recordings live in `public/audio` as mono MP3: `alarm.mp3` (a seamless loop) and `bark.mp3` (a short run of barks; set the moment each bark starts in `tuning.ts` → `sound.dog.barkTimes`). If a file is missing, a placeholder made in code is used.
+- Original WAV masters are kept in `assets-src/audio` (not sent to phones). To convert a new WAV: `ffmpeg -i in.wav -ac 1 -ar 44100 -b:a 128k out.mp3`.
 
 ## Tuning
 

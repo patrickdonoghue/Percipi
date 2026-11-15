@@ -25,8 +25,8 @@ function alarm(rate: number): Float32Array<ArrayBuffer> {
   return out;
 }
 
-// A single "woof": a falling growl tone mixed with breathy noise.
-function bark(rate: number): Float32Array<ArrayBuffer> {
+// One "woof": a falling growl tone mixed with breathy noise.
+function woof(rate: number): Float32Array<ArrayBuffer> {
   const dur = 0.32;
   const out = new Float32Array(Math.round(rate * dur));
   let phase = 0;
@@ -42,6 +42,15 @@ function bark(rate: number): Float32Array<ArrayBuffer> {
     low += 0.35 * (raw - low); // soften the buzz
     out[i] = low * env * 0.9;
   }
+  return out;
+}
+
+// A short run of woofs at the same moments as the real clip's barks.
+function bark(rate: number): Float32Array<ArrayBuffer> {
+  const one = woof(rate);
+  const times = TUNING.sound.dog.barkTimes;
+  const out = new Float32Array(Math.round(((times[times.length - 1] ?? 0) + 0.4) * rate));
+  for (const t of times) out.set(one, Math.round(t * rate));
   return out;
 }
 

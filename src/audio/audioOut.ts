@@ -9,6 +9,12 @@ export interface SoundHandle {
 const SILENT: SoundHandle = { stop: () => {} };
 const NAMES: SoundName[] = ['alarm', 'bark'];
 
+interface Loop {
+  name: SoundName;
+  src: AudioBufferSourceNode;
+  gain: GainNode;
+}
+
 // Plays sounds from positions in the world, heard from the camera (his head).
 // Browsers only allow audio after a tap, so unlock() must run inside the wake tap.
 export class AudioOut {
@@ -16,6 +22,22 @@ export class AudioOut {
   private master: GainNode | null = null;
   private readonly buffers = new Map<SoundName, AudioBuffer>();
   private readonly playing = new Set<AudioBufferSourceNode>();
+  private readonly loops = new Set<Loop>();
+  // Start downloading real recordings straight away (while "tap to wake up" shows).
+  private readonly downloads = NAMES.map((name) => ({ name, data: AudioOut.download(name) }));
+
+  private static async download(name: SoundName): Promise<ArrayBuffer | null> {
+    for (const ext of ['mp3', 'ogg']) {
+      try {
+        const res = await fetch(`${import.meta.env.BASE_URL}audio/${name}.${ext}`);
+        const type = res.headers.get('content-type') ?? '';
+        if (res.ok && !type.includes('text/html')) return await res.arrayBuffer();
+      } catch {
+        // try the next format
+      }
+    }
+    return null;
+  }
 
   unlock(): void {
     if (this.ctx) return;
@@ -46,18 +68,43 @@ export class AudioOut {
 
   // Real recordings replace the placeholders if public/audio/<name>.mp3 or .ogg exists.
   private async loadFiles(ctx: AudioContext): Promise<void> {
-    for (const name of NAMES) {
-      for (const ext of ['mp3', 'ogg']) {
-        try {
-          const res = await fetch(`${import.meta.env.BASE_URL}audio/${name}.${ext}`);
-          if (!res.ok) continue;
-          this.buffers.set(name, await ctx.decodeAudioData(await res.arrayBuffer()));
-          break;
-        } catch {
-          // missing or undecodable: keep the placeholder
-        }
+    for (const { name, data } of this.downloads) {
+      const bytes = await data;
+      if (!bytes) continue;
+      try {
+        const buf = await ctx.decodeAudioData(bytes.slice(0));
+        this.buffers.set(name, buf);
+        this.swapLoops(name, buf);
+      } catch {
+        // undecodable: keep the placeholder
       }
     }
+  }
+
+  // A loop that started on the placeholder switches to the real recording.
+  private swapLoops(name: SoundName, buf: AudioBuffer): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    for (const loop of this.loops) {
+      if (loop.name !== name) continue;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      src.connect(loop.gain);
+      src.start();
+      this.track(src);
+      try {
+        loop.src.stop();
+      } catch {
+        // already stopped
+      }
+      loop.src = src;
+    }
+  }
+
+  private track(src: AudioBufferSourceNode): void {
+    this.playing.add(src);
+    src.onended = () => this.playing.delete(src);
   }
 
   setListener(position: Vector3, forward: Vector3): void {
@@ -100,12 +147,14 @@ export class AudioOut {
     });
     src.connect(gain).connect(pan).connect(this.master);
     src.start();
-    this.playing.add(src);
-    src.onended = () => this.playing.delete(src);
+    this.track(src);
+    const loop: Loop | null = src.loop ? { name, src, gain } : null;
+    if (loop) this.loops.add(loop);
     return {
       stop: () => {
+        if (loop) this.loops.delete(loop);
         try {
-          src.stop();
+          (loop?.src ?? src).stop();
         } catch {
           // already stopped
         }
@@ -122,5 +171,6 @@ export class AudioOut {
       }
     }
     this.playing.clear();
+    this.loops.clear();
   }
 }

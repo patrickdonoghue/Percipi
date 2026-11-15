@@ -20,7 +20,8 @@ export class Director {
   private alarmSound: SoundHandle | null = null;
   private nextAlarmPulse = 0;
   private dogTriggered = false;
-  private barkTimes: number[] = [];
+  private barkClipAt: number | null = null; // when the bark clip will start
+  private barkTimes: number[] = []; // upcoming barks (one ripple each)
   private now = 0;
   readonly alarmSwitch: Interactable;
 
@@ -73,11 +74,17 @@ export class Director {
     const inLiving = x >= LIVING_AREA.minX && x <= LIVING_AREA.maxX && z >= LIVING_AREA.minZ && z <= LIVING_AREA.maxZ;
     if (!this.dogTriggered && inLiving) {
       this.dogTriggered = true;
-      for (let i = 0; i < d.barkCount; i++) this.barkTimes.push(time + d.startDelay + i * d.barkSpacing);
+      this.barkClipAt = time + d.startDelay;
+      this.barkTimes = d.barkTimes.map((t) => this.barkClipAt! + t);
+    }
+    // The clip plays once; each bark inside it sends a ripple.
+    if (this.barkClipAt !== null && time >= this.barkClipAt) {
+      this.barkClipAt = null;
+      this.audio.play('bark', this.positionOf(this.dog), { volume: d.volume, radius: d.radius });
+      this.log(this.dog, 'bark', 'start');
     }
     while (this.barkTimes.length > 0 && this.barkTimes[0]! <= time) {
       this.barkTimes.shift();
-      this.audio.play('bark', this.positionOf(this.dog), { volume: d.volume, radius: d.radius });
       this.pulse(this.dog, 'bark');
     }
   }
@@ -85,6 +92,7 @@ export class Director {
   // End of the walk: silence everything.
   stopAll(): void {
     this.alarmSound = null;
+    this.barkClipAt = null;
     this.barkTimes = [];
     this.audio.stopAll();
   }

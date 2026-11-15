@@ -113,8 +113,9 @@ export const TUNING = {
     dog: {
       radius: 30,
       volume: 0.9,
-      barkCount: 3,
-      barkSpacing: 0.65, // seconds between barks
+      // The bark sound is one clip containing several barks (public/audio/bark.mp3).
+      // These are the moments (seconds into the clip) each bark starts: one ripple each.
+      barkTimes: [0, 0.6, 1.2],
       startDelay: 0.4, // seconds after entering the living area
     },
   },
