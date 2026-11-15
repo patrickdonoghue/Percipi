@@ -2,7 +2,7 @@
 
 ## Project
 
-Percipi is a browser-based Three.js visualization of Berkeley's "to be is to be perceived". The world exists only while the character senses it. Read `PRD.md` before any work. The PRD is the source of truth; if a request conflicts with it, ask.
+Percipi is a browser-based Three.js visualization of Berkeley's "to be is to be perceived". The world exists only while the character senses it. The user explores a normal, solid world in first person (POV); after they end it, the walk is replayed from an isometric view where things appear and dissolve based on what the character sensed. Read `PRD.md` before any work. The PRD is the source of truth; if a request conflicts with it, ask.
 
 ## Owner
 
@@ -29,9 +29,10 @@ Patrick is not a strong coder. Explain changes in plain language, give exact ste
 
 - All magic numbers go in `tuning.ts` (dissolve times, cone angle, sound radii, smell decay)
 - Every perceivable object uses the shared sensory tag system; no one-off visibility logic
-- One perception engine decides existence each frame; rendering only reads its output
-- The dissolve shader is the only way objects appear or disappear
-- Never accumulate: unsensed objects dissolve out
+- POV mode shows the world normally: nothing appears or disappears there
+- One perception engine decides what is sensed each frame (live in POV, recorded); the replay renders only from that recording
+- In the replay, the dissolve shader is the only way objects appear or disappear
+- Never accumulate: unsensed objects dissolve out (in the replay)
 - Use placeholder grey boxes when an asset is missing; never block on assets
 - Keep files small and modular; no file over ~300 lines
 
@@ -46,7 +47,8 @@ Patrick is not a strong coder. Explain changes in plain language, give exact ste
 
 - Work one phase at a time as defined in the PRD
 - Current phase: **Phase 0** — grey box, sight only
-- Phase 0 acceptance: "grey-box rooms dissolve in and out convincingly as I look around"
+- Phase 0 scope: solid POV walk, end button, recording, basic isometric replay (orbit/zoom, no roof, walls cut low)
+- Phase 0 acceptance: "after I walk around and end the exploration, the replay shows grey-box rooms dissolving in and out convincingly as he looks around"
 - Before moving phases: wiring check, performance HUD baseline (FPS, draw calls), feel evaluation on desktop and a real phone
 
 ## Workflow

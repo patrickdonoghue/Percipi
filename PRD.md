@@ -1,12 +1,12 @@
-# Percipi — PRD v0.1
+# Percipi — PRD v0.2
 
 ## Summary
 
-Percipi is a browser-based interactive visualization of Berkeley's idea that to be is to be perceived (esse est percipi). The world exists only while the character senses it. Phase 1 delivers one environment, a house with a backyard, explored in first person and then replayed in third person.
+Percipi is a browser-based interactive visualization of Berkeley's idea that to be is to be perceived (esse est percipi). The world exists only while the character senses it. The user first explores a normal, solid world in first person; afterwards the exploration is replayed from an isometric view, where the world appears and dissolves around the character according to what they sensed. Phase 1 delivers one environment, a house with a backyard.
 
 ## Goals
 
-- Make the idea understood without text, through a POV walkthrough followed by a zoom-out replay
+- Make the idea understood without text, through a POV walkthrough followed by an isometric replay that reveals what was perceived
 - Run smoothly in mobile and desktop browsers
 - Build one environment end to end, structured so a reusable system can be extracted later
 
@@ -28,28 +28,30 @@ Percipi is a browser-based interactive visualization of Berkeley's idea that to 
 ## Experience Flow
 
 1. **Wake screen:** black screen, "tap to wake up". The tap unlocks browser audio and requests gyro permission on iOS.
-2. **POV walkthrough:** first person, free roam. Camera = his head.
-3. **Recording:** every frame logs position, head orientation, and sensory events.
-4. **Zoom-out:** the camera pulls out of his head into third person.
-5. **Replay:** the walkthrough plays back. The user orbits, zooms, tilts, and scrubs the timeline.
+2. **POV walkthrough:** first person, free roam. Camera = his head. Everything looks and sounds as it normally would: nothing appears or disappears.
+3. **Recording:** behind the scenes, the perception engine runs every frame; position, head orientation, and what was sensed are logged.
+4. **End:** the user ends the exploration whenever they choose (on-screen button; a key on desktop).
+5. **Zoom-out:** the camera pulls out of his head up to an isometric view of the house.
+6. **Replay:** the walkthrough plays back with a figure for the character. The world exists only where he sensed it, appearing and dissolving moment to moment. The view starts isometric; the user can orbit, zoom, tilt, and play, pause, and scrub the timeline.
 
 ## Controls
 
-- **Desktop POV:** WASD to move, mouse look (pointer lock)
-- **Mobile POV:** left virtual joystick to move, right-side drag to look, gyro look combined (all drive the same head orientation)
+- **Desktop POV:** WASD to move, mouse look (pointer lock), E to open/close doors, a key to end the exploration
+- **Mobile POV:** left virtual joystick to move, right-side drag to look, gyro look combined (all drive the same head orientation); on-screen button to end the exploration
 - **Replay:** orbit, zoom, tilt via mouse or touch gestures; play, pause, scrub
 
 ## Perception Engine
 
-One system decides each frame what exists. Every object carries sensory tags.
+One system decides each frame what the character senses, and therefore what exists. It runs live during the POV walkthrough (recorded, not shown) and its output drives the replay. Every object carries sensory tags.
 
 - **Sight:** view cone from the head plus line-of-sight raycasts. Doors and walls block it.
 - **Sound:** emitter with radius. Ripples expand from the source; when one reaches him, the source appears hazy and unstable, turning solid once seen.
 - **Smell:** emitter with plume. Drifting trails; where a trail touches him, a ghostly fragment of the source flickers in and out. Smell lingers.
-- **No accumulation:** objects that stop being sensed dissolve away.
+- **No accumulation:** objects that stop being sensed dissolve away (in the replay).
 
-## Transitions
+## Transitions (replay only)
 
+- POV shows the world normally; dissolves are seen only in the replay
 - Noise-based dissolve shader applied to every perceivable object
 - Appear ≈ 0.3s, vanish ≈ 0.7s, both in `tuning.ts`
 - Feel: stone in a pond — quick splash, slow fade
@@ -59,6 +61,10 @@ One system decides each frame what exists. Every object carries sensory tags.
 
 Layout: see `docs/floorplan.png` (Patrick's floor plan). Build the grey box from it. Include at least one window and one blind corner for the voice.
 
+In the replay, the house has no roof and walls are shown cut low (dollhouse view) so the character and rooms stay visible from above.
+
+The walkthrough beats below are lived normally in POV; the replay shows how each was perceived:
+
 1. Bedroom in darkness. Alarm clock rings and appears through sound alone.
 2. Eyes open; sunlight; bedroom forms.
 3. Bedroom door opens to the hallway; passed rooms dissolve.
@@ -67,7 +73,7 @@ Layout: see `docs/floorplan.png` (Patrick's floor plan). Build the grey box from
 6. Back door opens; backyard appears, including the view through windows.
 7. A voice calls "hey, over here", prompting him to turn or round a corner.
 
-**Per-pixel sight:** visibility is decided per pixel, not per object, by treating the eyes as a light source (shadow-map style). A door open a crack reveals only the wedge of the room in its line of sight. Prove this in Phase 0, including on mobile; per-object visibility is the fallback.
+**Per-pixel sight:** in the replay, visibility is decided per pixel, not per object, by treating the recorded eyes as a light source (shadow-map style). A door open a crack reveals only the wedge of the room in its line of sight. Prove this in Phase 0, including on mobile; per-object visibility is the fallback.
 
 ## Scene Authoring (Blender)
 
@@ -85,9 +91,9 @@ Patrick lays out the house in Blender and exports one GLB of the scene, used dir
 
 ## Phases
 
-- **Phase 0 — grey box:** untextured rooms, sight only. Acceptance: "grey-box rooms dissolve in and out convincingly as I look around."
+- **Phase 0 — grey box:** untextured rooms, sight only. Solid POV walkthrough, end button, recording, and a basic isometric replay. Acceptance: "after I walk around and end the exploration, the replay shows grey-box rooms dissolving in and out convincingly as he looks around."
 - **Phase 1 — senses:** sound and smell systems with placeholder assets.
-- **Phase 2 — the house:** real assets, full sequence, recording and replay.
+- **Phase 2 — the house:** real assets, full sequence, polished zoom-out and replay controls.
 - **Phase 3 — polish:** mobile tuning, performance, iOS testing.
 
 ## Validation
@@ -105,4 +111,4 @@ Run before adding content in each phase: wiring check, performance baseline (HUD
 ## Open Questions
 
 - Replay option for a "ghost trail" of everything perceived?
-- How long should the walkthrough run before the zoom-out?
+- Should there be a suggested length or gentle nudge to end the walkthrough?
