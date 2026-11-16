@@ -3,7 +3,7 @@
 
 import { TUNING } from '../tuning';
 
-export type SoundName = 'alarm' | 'bark' | 'sizzle';
+export type SoundName = 'alarm' | 'bark' | 'sizzle' | 'voice';
 
 // Digital alarm clock: four quick beeps, then a pause (one 1-second loop).
 function alarm(rate: number): Float32Array<ArrayBuffer> {
@@ -73,8 +73,29 @@ function sizzle(rate: number): Float32Array<ArrayBuffer> {
   return out;
 }
 
+// Stand-in for a voice: two vowel-like hums ("hey" ... "o-ver here").
+function voice(rate: number): Float32Array<ArrayBuffer> {
+  const out = new Float32Array(Math.round(rate * 1.4));
+  const parts: [number, number, number][] = [
+    [0.1, 0.25, 220], // start, length, pitch
+    [0.65, 0.55, 180],
+  ];
+  for (const [start, len, hz] of parts) {
+    const s0 = Math.round(start * rate);
+    const n = Math.round(len * rate);
+    for (let i = 0; i < n; i++) {
+      const t = i / rate;
+      const env = Math.sin((Math.PI * i) / n);
+      const tone = Math.sin(2 * Math.PI * hz * t) + 0.5 * Math.sin(2 * Math.PI * hz * 2 * t) + 0.3 * Math.sin(2 * Math.PI * hz * 3.1 * t);
+      out[s0 + i] = tone * env * 0.35;
+    }
+  }
+  return out;
+}
+
 export function synthesize(name: SoundName, rate: number): Float32Array<ArrayBuffer> {
   if (name === 'alarm') return alarm(rate);
+  if (name === 'voice') return voice(rate);
   if (name === 'sizzle') return sizzle(rate);
   return bark(rate);
 }

@@ -7,24 +7,45 @@ import type { SoundField } from '../perception/sound';
 import type { Perceivable } from '../perception/tags';
 import type { Recorder } from '../replay/recorder';
 import type { GreyboxWorld } from './greybox';
-import { LIVING_AREA } from './layout';
-import { SOUND_SOURCES } from './sounds';
+import { HOUSE_AREA, LIVING_AREA, type Rect } from './layout';
+import { playSettings, SOUND_SOURCES } from './sounds';
+
+// Moments inside a one-shot clip that each send a ripple.
+function rippleTimes(sound: SoundName): readonly number[] {
+  if (sound === 'bark') return TUNING.sound.dog.barkTimes;
+  if (sound === 'voice') return TUNING.sound.voice.phraseTimes;
+  return [0];
+}
 
 // Runs the walk's sound moments:
 // - the alarm clock rings from waking until he switches it off
 // - the bacon sizzles in the kitchen the whole time (quiet, heard only nearby)
 // - the dog in the backyard barks a few times the first time he enters the living area
+// - the caller by the backyard trees calls "hey, over here" the first time he steps
+//   outside (either door), and again a couple of times until he looks at them
 // Each sound plays as audio, sends ripples into the perception engine, and is recorded.
+
+interface Clip {
+  at: number; // when it starts
+  source: Perceivable;
+  sound: SoundName;
+}
+
+const inside = (r: Rect, x: number, z: number) => x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ;
 export class Director {
   private readonly alarm: Perceivable;
   private readonly dog: Perceivable;
   private readonly bacon: Perceivable;
+  private readonly caller: Perceivable;
+  private callerTriggered = false;
+  private callsMade = 0;
+  private nextCall: number | null = null;
   private nextSizzlePulse = 0;
   private alarmSound: SoundHandle | null = null;
   private nextAlarmPulse = 0;
   private dogTriggered = false;
-  private barkClipAt: number | null = null; // when the bark clip will start
-  private barkTimes: number[] = []; // upcoming barks (one ripple each)
+  private clips: Clip[] = []; // one-shot clips waiting to start
+  private ripples: { at: number; source: Perceivable; sound: SoundName }[] = []; // upcoming ripples inside clips
   private now = 0;
   readonly alarmSwitch: Interactable;
 
@@ -42,6 +63,7 @@ export class Director {
     this.alarm = find(SOUND_SOURCES.alarm.itemId);
     this.dog = find(SOUND_SOURCES.dog.itemId);
     this.bacon = find(SOUND_SOURCES.bacon.itemId);
+    this.caller = find(SOUND_SOURCES.caller.itemId);
 
     const alarmPos = this.alarm.mesh.position;
     const isRinging = () => this.alarmSound !== null;
@@ -83,30 +105,48 @@ export class Director {
       this.nextSizzlePulse += TUNING.sound.sizzle.pulseSeconds;
     }
 
-    const d = TUNING.sound.dog;
-    const inLiving = x >= LIVING_AREA.minX && x <= LIVING_AREA.maxX && z >= LIVING_AREA.minZ && z <= LIVING_AREA.maxZ;
-    if (!this.dogTriggered && inLiving) {
+    if (!this.dogTriggered && inside(LIVING_AREA, x, z)) {
       this.dogTriggered = true;
-      this.barkClipAt = time + d.startDelay;
-      this.barkTimes = d.barkTimes.map((t) => this.barkClipAt! + t);
+      this.clips.push({ at: time + TUNING.sound.dog.startDelay, source: this.dog, sound: 'bark' });
     }
-    // The clip plays once; each bark inside it sends a ripple.
-    if (this.barkClipAt !== null && time >= this.barkClipAt) {
-      this.barkClipAt = null;
-      this.audio.play('bark', this.positionOf(this.dog), { volume: d.volume, radius: d.radius });
-      this.log(this.dog, 'bark', 'start');
+
+    const v = TUNING.sound.voice;
+    if (!this.callerTriggered && !inside(HOUSE_AREA, x, z)) {
+      this.callerTriggered = true;
+      this.nextCall = time;
     }
-    while (this.barkTimes.length > 0 && this.barkTimes[0]! <= time) {
-      this.barkTimes.shift();
-      this.pulse(this.dog, 'bark');
+    if (this.nextCall !== null && time >= this.nextCall) {
+      this.clips.push({ at: time, source: this.caller, sound: 'voice' });
+      this.callsMade++;
+      this.nextCall = this.callsMade < v.maxCalls ? time + v.repeatSeconds : null;
     }
+    // Once he has seen the caller, they stop calling.
+    if (this.caller.sensed.sight) this.nextCall = null;
+
+    this.runClips(time);
+  }
+
+  // Start due clips (played once); each bark/phrase inside a clip sends a ripple.
+  private runClips(time: number): void {
+    for (const clip of this.clips.filter((c) => c.at <= time)) {
+      const settings = playSettings(clip.sound);
+      this.audio.play(clip.sound, this.positionOf(clip.source), settings);
+      this.log(clip.source, clip.sound, 'start');
+      for (const offset of rippleTimes(clip.sound)) {
+        this.ripples.push({ at: clip.at + offset, source: clip.source, sound: clip.sound });
+      }
+    }
+    this.clips = this.clips.filter((c) => c.at > time);
+    for (const r of this.ripples.filter((r) => r.at <= time)) this.pulse(r.source, r.sound);
+    this.ripples = this.ripples.filter((r) => r.at > time);
   }
 
   // End of the walk: silence everything.
   stopAll(): void {
     this.alarmSound = null;
-    this.barkClipAt = null;
-    this.barkTimes = [];
+    this.clips = [];
+    this.ripples = [];
+    this.nextCall = null;
     this.audio.stopAll();
   }
 

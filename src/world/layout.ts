@@ -31,6 +31,9 @@ export const BOUNDS: Rect = rectPx(0, 230, 1918, 1790);
 // The open-plan kitchen + living area (the dog barks when he first walks in).
 export const LIVING_AREA: Rect = rectPx(504, 589, 897, 1350);
 
+// The house footprint (stepping outside it sets off the caller).
+export const HOUSE_AREA: Rect = rectPx(504, 589, 1376, 1350);
+
 const FENCE_HEIGHT = 1.8;
 const HEDGE_HEIGHT = 1.5;
 const HEDGE_PIECE = 2.0;
@@ -127,5 +130,5 @@ export const FURNITURE: BoxSpec[] = [
   ...chunkedBoxPx('yard_hedge_west', 'furniture', 245, 543, 315, 1503, HEDGE_HEIGHT, HEDGE_PIECE),
   ...chunkedBoxPx('yard_hedge_east', 'furniture', 1631, 617, 1699, 1580, HEDGE_HEIGHT, HEDGE_PIECE),
   prop('yard_dog', 680, 310, 752, 345, 0.6),
-  prop('yard_caller', 1480, 540, 1516, 576, 1.7), // round the house's back corner
+  prop('yard_caller', 1542, 422, 1578, 458, 1.7), // backyard north-east corner, by the trees
 ];

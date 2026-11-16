@@ -32,6 +32,7 @@ Every push to `main` publishes the site to GitHub Pages (see `.github/workflows/
 - The alarm clock by the bed rings when you wake; walk up to it and press **E** (or tap **Turn off alarm**).
 - The dog in the backyard barks a few times the first time you walk into the kitchen/living area.
 - In the replay: pale-blue ripples spread from each sound; something he heard but hasn't seen shows hazy and flickering, and turns solid once he sees it. The sounds play again, heard from where his head was (pause = silence; scrubbing picks up mid-sound).
+- The first time you step outside (front or patio door), someone by the trees in the backyard's far corner calls "hey, over here" (`HeyOverHere.mp3`). They call up to three times, 5 s apart, until you look at them.
 - Bacon sizzles in the kitchen (quiet, heard only nearby) and its smell drifts through the house along open paths. In the replay, faint amber wisps show the smell; when it reaches him, ghostly fragments of the bacon and kitchen counter flicker in and out before he sees them.
 - Real recordings live in `public/audio` as mono MP3: `alarm.mp3` (a seamless loop), `sizzle.mp3` (a seamless 20 s loop cut from Bacon.m4a) and `bark.mp3` (a short run of barks; set the moment each bark starts in `tuning.ts` → `sound.dog.barkTimes`). If a file is missing, a placeholder made in code is used.
 - Original WAV masters are kept in `assets-src/audio` (not sent to phones). To convert a new WAV: `ffmpeg -i in.wav -ac 1 -ar 44100 -b:a 128k out.mp3`.

@@ -7,7 +7,10 @@ export interface SoundHandle {
 }
 
 const SILENT: SoundHandle = { stop: () => {} };
-const NAMES: SoundName[] = ['alarm', 'bark', 'sizzle'];
+const NAMES: SoundName[] = ['alarm', 'bark', 'sizzle', 'voice'];
+
+// File name (in public/audio, without extension) for each sound.
+const FILES: Record<SoundName, string> = { alarm: 'alarm', bark: 'bark', sizzle: 'sizzle', voice: 'HeyOverHere' };
 
 interface Loop {
   name: SoundName;
@@ -29,7 +32,7 @@ export class AudioOut {
   private static async download(name: SoundName): Promise<ArrayBuffer | null> {
     for (const ext of ['mp3', 'ogg']) {
       try {
-        const res = await fetch(`${import.meta.env.BASE_URL}audio/${name}.${ext}`);
+        const res = await fetch(`${import.meta.env.BASE_URL}audio/${FILES[name]}.${ext}`);
         const type = res.headers.get('content-type') ?? '';
         if (res.ok && !type.includes('text/html')) return await res.arrayBuffer();
       } catch {

@@ -115,6 +115,14 @@ export const TUNING = {
       volume: 0.25,
       pulseSeconds: 1.0,
     },
+    voice: {
+      radius: 30, // the caller can be heard across the yard
+      volume: 1.0,
+      // "Hey" and "over here" start at these moments in HeyOverHere.mp3 (one ripple each).
+      phraseTimes: [0.1, 0.65],
+      repeatSeconds: 5, // calls again after this long if he hasn't looked
+      maxCalls: 3,
+    },
     dog: {
       radius: 30,
       volume: 0.9,
