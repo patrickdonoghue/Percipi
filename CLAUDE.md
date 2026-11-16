@@ -46,8 +46,10 @@ Patrick is not a strong coder. Explain changes in plain language, give exact ste
 ## Phase Discipline
 
 - Work one phase at a time as defined in the PRD
-- Current phase: **Phase 1** — senses: sound and smell with placeholder assets
+- Current phase: **Phase 2** — the house: real assets, full sequence, polished zoom-out and replay controls
 - Phase 0 (grey box, sight only, per-pixel replay) accepted by Patrick on 2026-11-15; baseline in `docs/performance-baseline.md`
+- Phase 1 (sound: alarm, dog, sizzle; smell: bacon plume; ripples, haze, ghost flicker, replay audio) accepted by Patrick on 2026-11-16
+- First Phase 2 task: the "hey, over here" caller (PRD beat 7), using `public/audio/HeyOverHere.mp3`
 - Patrick wants strict phase order: if he asks for a later-phase feature, say which phase it belongs to and ask before building it
 - Before moving phases: wiring check, performance HUD baseline (FPS, draw calls), feel evaluation on desktop and a real phone
 

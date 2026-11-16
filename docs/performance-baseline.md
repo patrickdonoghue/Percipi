@@ -41,3 +41,9 @@ Commit `e17c675`, live site.
 | Galaxy S24+, Chrome | Replay with ripples, haze, audio | 60 (never dropped below) |
 
 Note: the S24+ is a high-end phone; a mid-range phone (the PRD target) is still worth a check before Phase 3.
+
+## Phase 1 accepted (sound + smell) — 2026-11-16
+
+Commit `63ba78d`. Accepted by Patrick ("looks great"). Stage B measured 60 fps on the Galaxy S24+ (above);
+Stage C (smell plume, wisps, ghost flicker) was not separately measured on the phone; re-check at the start of Phase 2.
+On the Mac the smell simulation (64 puffs, 30 steps/s) adds no measurable frame cost.
