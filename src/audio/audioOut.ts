@@ -126,7 +126,16 @@ export class AudioOut {
     }
   }
 
-  play(name: SoundName, at: Vector3, opts: { loop?: boolean; volume: number; radius: number }): SoundHandle {
+  // Length of a sound in seconds (0 if not loaded).
+  duration(name: SoundName): number {
+    return this.buffers.get(name)?.duration ?? 0;
+  }
+
+  play(
+    name: SoundName,
+    at: Vector3,
+    opts: { loop?: boolean; volume: number; radius: number; offset?: number },
+  ): SoundHandle {
     const ctx = this.ctx;
     const buf = this.buffers.get(name);
     if (!ctx || !this.master || !buf) return SILENT;
@@ -146,7 +155,7 @@ export class AudioOut {
       positionZ: at.z,
     });
     src.connect(gain).connect(pan).connect(this.master);
-    src.start();
+    src.start(0, (opts.offset ?? 0) % buf.duration);
     this.track(src);
     const loop: Loop | null = src.loop ? { name, src, gain } : null;
     if (loop) this.loops.add(loop);

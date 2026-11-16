@@ -1,13 +1,16 @@
 import { Camera, DoubleSide, Material, PerspectiveCamera, Quaternion, Scene, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { DEG, TUNING } from '../tuning';
+import type { AudioOut } from '../audio/audioOut';
 import type { DissolveRenderer } from '../render/dissolve';
 import { PixelSight, pixelSightUniforms } from '../perception/pixelSight';
 import type { GreyboxWorld } from '../world/greybox';
 import { Character } from './character';
 import { Dollhouse } from './dollhouse';
 import { Playback } from './playback';
-import type { Frame } from './recorder';
+import type { Frame, SoundEvent } from './recorder';
+import { ReplayAudio } from './replayAudio';
+import { Ripples } from './ripples';
 import { SightHistory } from './sightHistory';
 import { ReplayBar } from './ui';
 
@@ -23,6 +26,10 @@ export class ReplayMode {
   private readonly playback: Playback;
   private readonly bar: ReplayBar;
   private readonly history: SightHistory | null = null; // per-pixel sight (null = per-object fallback)
+  private readonly ripples: Ripples;
+  private readonly sounds: ReplayAudio;
+  private readonly ear = new Vector3();
+  private readonly earForward = new Vector3();
   private phase: 'zoom' | 'hold' | 'play' = 'zoom';
   private phaseTime = 0;
 
@@ -40,6 +47,8 @@ export class ReplayMode {
     povCamera: PerspectiveCamera,
     canvas: HTMLCanvasElement,
     frames: readonly Frame[],
+    events: readonly SoundEvent[],
+    audio: AudioOut,
     private readonly world: GreyboxWorld,
     private readonly dissolve: DissolveRenderer,
   ) {
@@ -87,6 +96,10 @@ export class ReplayMode {
     }
     this.character.root.visible = false;
     scene.add(this.character.root);
+    this.ripples = new Ripples(events, world.items);
+    this.ripples.root.visible = false;
+    scene.add(this.ripples.root);
+    this.sounds = new ReplayAudio(audio, events, world.items);
 
     if (TUNING.pixelSight.enabled) {
       this.history = new SightHistory(new PixelSight(renderer, scene), this.playback, world, this.dollhouse, this.character);
@@ -140,11 +153,20 @@ export class ReplayMode {
       this.bar.update(this.playback.time, this.playback.playing);
     }
 
+    const t = this.phase === 'play' ? this.playback.time : this.playback.duration;
+    const playing = this.phase === 'play';
+
+    // Hearing: hazy objects, ripples, and the sounds themselves.
+    this.dissolve.updateHaze(this.world.items, dt, t);
+    this.ripples.root.visible = playing;
+    if (playing) this.ripples.update(t);
+    this.updateEar(t);
+    this.sounds.update(t, playing && this.playback.playing, this.ear, this.earForward);
+
     if (this.history) {
       // Per-pixel: the recorded eyes decide every pixel; cheap culling skips the rest.
       const solid = pixelSightUniforms.uSolid;
       solid.value = Math.max(0, solid.value - dt / TUNING.dissolve.vanishSeconds);
-      const t = this.phase === 'play' ? this.playback.time : this.playback.duration;
       this.history.update(t);
       const history = this.history;
       this.dissolve.showPerPixel(
@@ -169,6 +191,14 @@ export class ReplayMode {
     this.target.add(this.follow);
     this.camera.position.add(this.follow);
     this.controls.target.copy(this.target);
+  }
+
+  // Replay sound is heard from where his head was.
+  private updateEar(t: number): void {
+    const f = this.playback.frameAt(t);
+    if (!f) return;
+    this.ear.set(f.x, TUNING.player.eyeHeight, f.z);
+    this.earForward.set(-Math.sin(f.yaw) * Math.cos(f.pitch), Math.sin(f.pitch), -Math.cos(f.yaw) * Math.cos(f.pitch));
   }
 
   private enter(phase: 'zoom' | 'hold' | 'play'): void {

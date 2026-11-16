@@ -135,6 +135,17 @@ export const TUNING = {
     minDistance: 6,
     maxDistance: 90,
     maxPolarDeg: 82, // stop the camera going below the ground
+    ripple: {
+      width: 0.3, // metres: thickness of a sound ripple ring
+      opacity: 0.6,
+      color: [0.75, 0.86, 1.0] as const, // pale blue, distinct from the warm dissolve edge
+      height: 0.06, // metres above the floor
+    },
+    haze: {
+      level: 0.55, // how dissolved a heard-but-unseen object looks (0 solid .. 1 gone)
+      flicker: 0.3, // how much it wavers
+      flickerSpeed: 9, // how fast it wavers
+    },
   },
 
   character: {

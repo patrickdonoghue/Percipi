@@ -5,9 +5,15 @@ import { PIXEL_SIGHT_GLSL, pixelSightUniforms } from '../perception/pixelSight';
 
 // The dissolve shader is the only way objects appear or disappear.
 // uDissolve: 0 = fully present, 1 = fully gone.
+// uHaze: 0..1 how strongly an object shows as "heard but not seen" (hazy, flickering).
 
 const DISSOLVE_GLSL = /* glsl */ `
 uniform float uDissolve;
+uniform float uHaze;
+uniform float uTime;
+uniform float uHazeLevel;
+uniform float uHazeFlicker;
+uniform float uHazeFlickerSpeed;
 uniform float uNoiseScale;
 uniform float uEdgeWidth;
 uniform float uEdgeIntensity;
@@ -49,9 +55,16 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
   const d = TUNING.dissolve;
   const uDissolve: DissolveUniform = { value: 1 }; // start gone: nothing exists before waking
   mat.userData.dissolve = uDissolve;
+  const uHaze: DissolveUniform = { value: 0 };
+  mat.userData.haze = uHaze;
 
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uDissolve = uDissolve;
+    shader.uniforms.uHaze = uHaze;
+    shader.uniforms.uTime = sharedDissolveUniforms.uTime;
+    shader.uniforms.uHazeLevel = { value: TUNING.replay.haze.level };
+    shader.uniforms.uHazeFlicker = { value: TUNING.replay.haze.flicker };
+    shader.uniforms.uHazeFlickerSpeed = { value: TUNING.replay.haze.flickerSpeed };
     shader.uniforms.uNoiseScale = { value: d.noiseScale };
     shader.uniforms.uEdgeWidth = { value: d.edgeWidth };
     shader.uniforms.uEdgeIntensity = { value: d.edgeIntensity };
@@ -78,6 +91,12 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
           `#include <clipping_planes_fragment>
           // Per-pixel replay: each point's own seen/fade state. Otherwise per object.
           float dAmt = uPixelMode > 0.5 ? pixelDissolve(vDissolvePos) * (1.0 - uSolid) : uDissolve;
+          // Heard but not seen: partly there, wavering over space and time.
+          if (uHaze > 0.0) {
+            float flick = dNoise(vec3(vDissolvePos.xz * 1.3, uTime * uHazeFlickerSpeed)) - 0.5;
+            float hazy = clamp(uHazeLevel + flick * 2.0 * uHazeFlicker, 0.0, 1.0);
+            dAmt = min(dAmt, mix(1.0, hazy, uHaze));
+          }
           float dN = dFbm(vDissolvePos * uNoiseScale);
           float dT = dAmt <= 0.0 ? -1.0 : (dAmt >= 1.0 ? 2.0 : mix(uNoiseLow, uNoiseHigh, dAmt));
           if (dN < dT) discard;
@@ -93,9 +112,17 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
   return mat;
 }
 
+// Shared by all dissolve materials.
+export const sharedDissolveUniforms = { uTime: { value: 0 } };
+
 function uniformOf(p: Perceivable): DissolveUniform {
   const mat = p.mesh.material as MeshStandardMaterial;
   return mat.userData.dissolve as DissolveUniform;
+}
+
+function hazeOf(p: Perceivable): DissolveUniform {
+  const mat = p.mesh.material as MeshStandardMaterial;
+  return mat.userData.haze as DissolveUniform;
 }
 
 // Reads the perception engine's output and animates each object's dissolve.
@@ -104,8 +131,25 @@ export class DissolveRenderer {
   showAll(items: readonly Perceivable[]): void {
     for (const p of items) {
       uniformOf(p).value = 0;
+      hazeOf(p).value = 0;
       p.mesh.visible = true;
     }
+  }
+
+  // Replay: objects he heard fade into a hazy state (quick), and out again (slow).
+  // Seeing them makes them solid; the shader takes whichever is more present.
+  updateHaze(items: readonly Perceivable[], dt: number, time: number): void {
+    sharedDissolveUniforms.uTime.value = time;
+    const { appearSeconds, vanishSeconds } = TUNING.dissolve;
+    for (const p of items) {
+      const h = hazeOf(p);
+      if (p.sensed.sound) h.value = Math.min(1, h.value + dt / appearSeconds);
+      else h.value = Math.max(0, h.value - dt / vanishSeconds);
+    }
+  }
+
+  isHazy(p: Perceivable): boolean {
+    return hazeOf(p).value > 0;
   }
 
   // Per-pixel replay: the shader decides each pixel; here we only skip drawing
@@ -113,7 +157,7 @@ export class DissolveRenderer {
   showPerPixel(items: readonly Perceivable[], drawable: (p: Perceivable) => boolean): void {
     for (const p of items) {
       uniformOf(p).value = 0;
-      p.mesh.visible = drawable(p);
+      p.mesh.visible = drawable(p) || this.isHazy(p);
     }
   }
 
@@ -125,7 +169,7 @@ export class DissolveRenderer {
       if (p.present) u.value = Math.max(0, u.value - dt / appearSeconds);
       else u.value = Math.min(1, u.value + dt / vanishSeconds);
       // Fully dissolved objects are skipped entirely (saves draw calls).
-      p.mesh.visible = u.value < 1 && !(hidden?.(p) ?? false);
+      p.mesh.visible = (u.value < 1 || this.isHazy(p)) && !(hidden?.(p) ?? false);
     }
   }
 }
