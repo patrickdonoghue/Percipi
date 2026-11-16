@@ -10,6 +10,7 @@ A browser visualization of Berkeley's *esse est percipi*: the world exists only 
 
 ## How it works (Phase 0)
 
+1. **Wake:** after "tap to wake up" his eyes are still closed: black screen, alarm ringing. Tap / click / press any key to open them; the morning light comes up.
 1. **Walk:** the house looks completely normal. Behind the scenes, everything he sees is recorded.
 2. **End walk:** press **Enter** (desktop) or tap **End walk** (top right).
 3. **Reveal:** the camera pulls out of his head; everything he wasn't looking at dissolves away.

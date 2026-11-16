@@ -82,6 +82,13 @@ export const TUNING = {
     },
   },
 
+  eyes: {
+    openSeconds: 1.2, // the black fades away this fast when he opens his eyes
+    sunriseSeconds: 3.5, // morning light rises to full over this long
+    startLight: 0.25, // light level (0..1) at the moment his eyes open
+    ignoreTapSeconds: 0.35, // the wake-up tap itself doesn't also open the eyes
+  },
+
   hud: {
     updateIntervalSeconds: 0.5,
   },
@@ -147,7 +154,7 @@ export const TUNING = {
     height: 1.35, // metres: puffs float around nose height
     heightSpread: 0.3,
     decay: 9, // seconds for a puff's strength to fall to about a third
-    prewarmSeconds: 18, // the bacon has been frying this long before he wakes
+    prewarmSeconds: 10, // the bacon has been frying this long before he wakes
     noticeStrength: 0.15, // weaker than this and he doesn't notice it
     lingerSeconds: 3, // smell stays with him this long after the last whiff
     fragmentRadius: 1.0, // metres: nearby objects (the counter) flicker with the source

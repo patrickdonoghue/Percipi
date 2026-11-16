@@ -21,8 +21,9 @@ export class PerceptionEngine {
 
   private readonly nose = new Vector3();
 
-  update(eye: Vector3, forward: Vector3, time: number, dt: number): void {
-    this.sight.update(eye, forward, this.cosHalfAngle);
+  update(eye: Vector3, forward: Vector3, time: number, dt: number, eyesOpen: boolean): void {
+    if (eyesOpen) this.sight.update(eye, forward, this.cosHalfAngle);
+    else for (const p of this.items) p.sensed.sight = false; // eyes closed: nothing is seen
     this.sound.update(time, eye);
     this.nose.copy(eye).y -= 0.1;
     this.smell.update(dt, time, this.nose);

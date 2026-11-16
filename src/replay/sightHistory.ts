@@ -74,6 +74,10 @@ export class SightHistory {
   private captureAt(slot: number, t: number, setDoors: boolean): void {
     const frame = this.playback.frameAt(t);
     if (!frame) return;
+    if (!frame.eyesOpen) {
+      this.slots[slot]!.time = null; // eyes closed: this moment saw nothing
+      return;
+    }
     if (setDoors) {
       this.playback.applyDoors(frame);
       this.world.root.updateMatrixWorld(true);

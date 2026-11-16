@@ -130,3 +130,20 @@ canvas {
   font-size: 13px;
   opacity: 0.8;
 }
+
+.eyes {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: max(18vh, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: #000;
+  color: rgba(220, 220, 220, 0.55);
+  font: 300 1.05rem Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}

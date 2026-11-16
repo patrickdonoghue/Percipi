@@ -11,6 +11,7 @@ import { DissolveRenderer } from './render/dissolve';
 import { Recorder } from './replay/recorder';
 import { ReplayMode } from './replay/replayMode';
 import { createEndButton } from './replay/ui';
+import { Eyes } from './eyes';
 import { setupWake } from './wake';
 import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
@@ -22,7 +23,8 @@ const canvas = renderer.domElement;
 document.getElementById('app')!.appendChild(canvas);
 
 const scene = new Scene();
-scene.add(new AmbientLight(0xffffff, TUNING.render.ambientIntensity));
+const ambient = new AmbientLight(0xffffff, TUNING.render.ambientIntensity);
+scene.add(ambient);
 const sun = new DirectionalLight(0xffffff, TUNING.render.sunIntensity);
 sun.position.set(...TUNING.render.sunPosition);
 scene.add(sun);
@@ -44,6 +46,20 @@ const hud = new Hud();
 const pov = new PovMode(canvas, world);
 pov.addInteractable(director.alarmSwitch);
 let walkTime = 0; // seconds since waking
+
+// He wakes with eyes closed; a tap opens them (then he can move).
+const eyes = new Eyes(() => {
+  pov.inputEnabled = true;
+});
+const lights = [
+  { light: ambient, full: TUNING.render.ambientIntensity },
+  { light: sun, full: TUNING.render.sunIntensity },
+  { light: fill, full: TUNING.render.fillIntensity },
+];
+// Morning light: dim when his eyes open, rising to full sunlight.
+const setDaylight = (level: number) => {
+  for (const l of lights) l.light.intensity = l.full * level;
+};
 let replay: ReplayMode | null = null;
 
 // wake -> pov (walk, recording) -> replay (zoom-out reveal, then playback)
@@ -70,6 +86,8 @@ const wake = setupWake(
   () => {
     mode = 'pov';
     endButton.show();
+    pov.inputEnabled = false; // lying in bed until his eyes open
+    eyes.close();
     director.start(walkTime);
   },
   (isTouch) => {
@@ -80,7 +98,7 @@ const wake = setupWake(
 
 // Dev-only handle for testing from the browser console.
 if (import.meta.env.DEV) {
-  Object.assign(window, { percipi: { pov, world, engine, smellField, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
+  Object.assign(window, { percipi: { pov, eyes, world, engine, smellField, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
 }
 
 window.addEventListener('resize', () => {
@@ -102,12 +120,16 @@ renderer.setAnimationLoop(() => {
     director.update(walkTime, pov.player.x, pov.player.z);
     audio.setListener(pov.camera.position, pov.forward());
     // The engine decides what he senses; it is recorded, not shown. POV looks normal.
-    engine.update(pov.camera.position, pov.forward(), walkTime, dt);
-    recorder.capture(walkTime, pov.pose, world.doors, world.items);
+    engine.update(pov.camera.position, pov.forward(), walkTime, dt, eyes.isOpen);
+    recorder.capture(walkTime, pov.pose, eyes.isOpen, world.doors, world.items);
+    const since = eyes.sinceOpen(performance.now());
+    const e = TUNING.eyes;
+    setDaylight(since === null ? e.startLight : Math.min(1, e.startLight + (1 - e.startLight) * (since / e.sunriseSeconds)));
     recorder.capturePlume(walkTime, smellField.puffs);
     dissolve.showAll(world.items);
     if (recorder.duration >= TUNING.replay.maxRecordSeconds) endWalk();
   } else if (mode === 'replay' && replay) {
+    setDaylight(1);
     replay.update(dt);
   }
 

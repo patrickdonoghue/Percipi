@@ -10,6 +10,7 @@ export interface Frame {
   z: number;
   yaw: number;
   pitch: number;
+  eyesOpen: boolean;
   doors: Float32Array; // how open each door was (0..1)
   seen: Uint8Array; // one bit per perceivable object: was it seen?
   heard: Uint8Array; // one bit per perceivable object: was it heard?
@@ -56,6 +57,7 @@ export class Recorder {
   capture(
     t: number,
     pose: { x: number; z: number; yaw: number; pitch: number },
+    eyesOpen: boolean,
     doors: readonly Door[],
     items: readonly Perceivable[],
   ): void {
@@ -65,6 +67,7 @@ export class Recorder {
       z: pose.z,
       yaw: pose.yaw,
       pitch: pose.pitch,
+      eyesOpen,
       doors: Float32Array.from(doors, (d) => d.openFraction),
       seen: pack(items, (p) => p.present),
       heard: pack(items, (p) => p.sensed.sound),
