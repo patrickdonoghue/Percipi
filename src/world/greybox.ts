@@ -4,7 +4,7 @@ import type { Perceivable } from '../perception/tags';
 import { makeBox, type BoxSpec } from './build';
 import { Door } from './door';
 import { BOUNDS, DOORS, FLOORS, FURNITURE, SPAWN, WALLS, type Rect } from './layout';
-import { applySoundTags } from './sounds';
+import { applySenseTags } from './sounds';
 import { buildWall } from './walls';
 
 export interface GreyboxWorld {
@@ -63,7 +63,7 @@ export function buildGreybox(): GreyboxWorld {
     items.push(d.item);
   }
 
-  applySoundTags(items);
+  applySenseTags(items);
   root.updateMatrixWorld(true);
   return { root, items, doors, colliders, bounds: BOUNDS, spawn: SPAWN };
 }

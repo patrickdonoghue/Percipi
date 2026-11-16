@@ -5,6 +5,7 @@ export interface SenseTags {
   sight: boolean; // can be seen
   blocksSight: boolean; // stops lines of sight (walls, doors, furniture)
   sound?: { radius: number }; // makes sound that can be heard up to `radius` metres away
+  smell?: true; // gives off a smell plume
 }
 
 export type Kind = 'floor' | 'wall' | 'furniture' | 'door' | 'prop';
@@ -19,6 +20,6 @@ export interface Perceivable {
   samples: Vector3[]; // same points in world space
 
   // Written by the perception engine each frame; read by rendering.
-  sensed: { sight: boolean; sound: boolean };
+  sensed: { sight: boolean; sound: boolean; smell: boolean };
   present: boolean; // does this object exist right now? (seen; heard-only shows hazy in the replay)
 }

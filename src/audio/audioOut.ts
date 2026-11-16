@@ -7,7 +7,7 @@ export interface SoundHandle {
 }
 
 const SILENT: SoundHandle = { stop: () => {} };
-const NAMES: SoundName[] = ['alarm', 'bark'];
+const NAMES: SoundName[] = ['alarm', 'bark', 'sizzle'];
 
 interface Loop {
   name: SoundName;

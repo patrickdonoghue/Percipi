@@ -4,6 +4,7 @@ import { TUNING } from './tuning';
 import { AudioOut } from './audio/audioOut';
 import { Hud } from './hud';
 import { PerceptionEngine } from './perception/engine';
+import { SmellField } from './perception/smell';
 import { SoundField } from './perception/sound';
 import { PovMode } from './pov';
 import { DissolveRenderer } from './render/dissolve';
@@ -33,7 +34,8 @@ const world = buildGreybox();
 scene.add(world.root);
 
 const soundField = new SoundField(world.items);
-const engine = new PerceptionEngine(world.items, soundField);
+const smellField = new SmellField(world.items, world.bounds);
+const engine = new PerceptionEngine(world.items, soundField, smellField);
 const dissolve = new DissolveRenderer();
 const recorder = new Recorder();
 const audio = new AudioOut();
@@ -55,7 +57,7 @@ const endWalk = () => {
   pov.inputEnabled = false;
   director.stopAll();
   if (document.pointerLockElement) document.exitPointerLock();
-  replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, recorder.events, audio, world, dissolve);
+  replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, recorder.events, recorder.plume, audio, world, dissolve);
 };
 
 const endButton = createEndButton(endWalk);
@@ -78,7 +80,7 @@ const wake = setupWake(
 
 // Dev-only handle for testing from the browser console.
 if (import.meta.env.DEV) {
-  Object.assign(window, { percipi: { pov, world, engine, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
+  Object.assign(window, { percipi: { pov, world, engine, smellField, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
 }
 
 window.addEventListener('resize', () => {
@@ -100,8 +102,9 @@ renderer.setAnimationLoop(() => {
     director.update(walkTime, pov.player.x, pov.player.z);
     audio.setListener(pov.camera.position, pov.forward());
     // The engine decides what he senses; it is recorded, not shown. POV looks normal.
-    engine.update(pov.camera.position, pov.forward(), walkTime);
+    engine.update(pov.camera.position, pov.forward(), walkTime, dt);
     recorder.capture(walkTime, pov.pose, world.doors, world.items);
+    recorder.capturePlume(walkTime, smellField.puffs);
     dissolve.showAll(world.items);
     if (recorder.duration >= TUNING.replay.maxRecordSeconds) endWalk();
   } else if (mode === 'replay' && replay) {

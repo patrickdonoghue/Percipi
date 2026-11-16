@@ -8,9 +8,10 @@ import type { GreyboxWorld } from '../world/greybox';
 import { Character } from './character';
 import { Dollhouse } from './dollhouse';
 import { Playback } from './playback';
-import type { Frame, SoundEvent } from './recorder';
+import type { Frame, PlumeSnapshot, SoundEvent } from './recorder';
 import { ReplayAudio } from './replayAudio';
 import { Ripples } from './ripples';
+import { SmellTrails } from './smellTrails';
 import { SightHistory } from './sightHistory';
 import { ReplayBar } from './ui';
 
@@ -28,6 +29,8 @@ export class ReplayMode {
   private readonly history: SightHistory | null = null; // per-pixel sight (null = per-object fallback)
   private readonly ripples: Ripples;
   private readonly sounds: ReplayAudio;
+  private readonly trails: SmellTrails;
+  private readonly canvas: HTMLCanvasElement;
   private readonly ear = new Vector3();
   private readonly earForward = new Vector3();
   private phase: 'zoom' | 'hold' | 'play' = 'zoom';
@@ -48,6 +51,7 @@ export class ReplayMode {
     canvas: HTMLCanvasElement,
     frames: readonly Frame[],
     events: readonly SoundEvent[],
+    plume: readonly PlumeSnapshot[],
     audio: AudioOut,
     private readonly world: GreyboxWorld,
     private readonly dissolve: DissolveRenderer,
@@ -100,6 +104,10 @@ export class ReplayMode {
     this.ripples.root.visible = false;
     scene.add(this.ripples.root);
     this.sounds = new ReplayAudio(audio, events, world.items);
+    this.trails = new SmellTrails(plume);
+    this.trails.points.visible = false;
+    scene.add(this.trails.points);
+    this.canvas = canvas;
 
     if (TUNING.pixelSight.enabled) {
       this.history = new SightHistory(new PixelSight(renderer, scene), this.playback, world, this.dollhouse, this.character);
@@ -156,10 +164,14 @@ export class ReplayMode {
     const t = this.phase === 'play' ? this.playback.time : this.playback.duration;
     const playing = this.phase === 'play';
 
-    // Hearing: hazy objects, ripples, and the sounds themselves.
-    this.dissolve.updateHaze(this.world.items, dt, t);
+    // Hearing and smell: hazy / ghostly objects, ripples, smell trails, and the sounds.
+    this.dissolve.updateSenses(this.world.items, dt, t);
     this.ripples.root.visible = playing;
-    if (playing) this.ripples.update(t);
+    this.trails.points.visible = playing;
+    if (playing) {
+      this.ripples.update(t);
+      this.trails.update(t, this.camera, this.canvas.height);
+    }
     this.updateEar(t);
     this.sounds.update(t, playing && this.playback.playing, this.ear, this.earForward);
 

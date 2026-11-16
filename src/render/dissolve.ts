@@ -6,6 +6,7 @@ import { PIXEL_SIGHT_GLSL, pixelSightUniforms } from '../perception/pixelSight';
 // The dissolve shader is the only way objects appear or disappear.
 // uDissolve: 0 = fully present, 1 = fully gone.
 // uHaze: 0..1 how strongly an object shows as "heard but not seen" (hazy, flickering).
+// uGhost: 0..1 how strongly it shows as "smelled but not seen" (ghostly, flickering in and out).
 
 const DISSOLVE_GLSL = /* glsl */ `
 uniform float uDissolve;
@@ -14,6 +15,9 @@ uniform float uTime;
 uniform float uHazeLevel;
 uniform float uHazeFlicker;
 uniform float uHazeFlickerSpeed;
+uniform float uGhost;
+uniform float uGhostLevel;
+uniform float uGhostSpeed;
 uniform float uNoiseScale;
 uniform float uEdgeWidth;
 uniform float uEdgeIntensity;
@@ -57,6 +61,8 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
   mat.userData.dissolve = uDissolve;
   const uHaze: DissolveUniform = { value: 0 };
   mat.userData.haze = uHaze;
+  const uGhost: DissolveUniform = { value: 0 };
+  mat.userData.ghost = uGhost;
 
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uDissolve = uDissolve;
@@ -65,6 +71,9 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
     shader.uniforms.uHazeLevel = { value: TUNING.replay.haze.level };
     shader.uniforms.uHazeFlicker = { value: TUNING.replay.haze.flicker };
     shader.uniforms.uHazeFlickerSpeed = { value: TUNING.replay.haze.flickerSpeed };
+    shader.uniforms.uGhost = uGhost;
+    shader.uniforms.uGhostLevel = { value: TUNING.replay.ghost.level };
+    shader.uniforms.uGhostSpeed = { value: TUNING.replay.ghost.flickerSpeed };
     shader.uniforms.uNoiseScale = { value: d.noiseScale };
     shader.uniforms.uEdgeWidth = { value: d.edgeWidth };
     shader.uniforms.uEdgeIntensity = { value: d.edgeIntensity };
@@ -97,6 +106,12 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
             float hazy = clamp(uHazeLevel + flick * 2.0 * uHazeFlicker, 0.0, 1.0);
             dAmt = min(dAmt, mix(1.0, hazy, uHaze));
           }
+          // Smelled but not seen: ghostly patches that flicker in and out.
+          if (uGhost > 0.0) {
+            float gate = smoothstep(0.42, 0.58, dNoise(vec3(vDissolvePos.xz * 0.35 + 17.0, uTime * uGhostSpeed)));
+            float ghost = clamp(uGhostLevel + (dNoise(vec3(vDissolvePos.xz * 1.7, uTime * 6.0)) - 0.5) * 0.4, 0.0, 1.0);
+            dAmt = min(dAmt, mix(1.0, ghost, uGhost * gate));
+          }
           float dN = dFbm(vDissolvePos * uNoiseScale);
           float dT = dAmt <= 0.0 ? -1.0 : (dAmt >= 1.0 ? 2.0 : mix(uNoiseLow, uNoiseHigh, dAmt));
           if (dN < dT) discard;
@@ -125,6 +140,11 @@ function hazeOf(p: Perceivable): DissolveUniform {
   return mat.userData.haze as DissolveUniform;
 }
 
+function ghostOf(p: Perceivable): DissolveUniform {
+  const mat = p.mesh.material as MeshStandardMaterial;
+  return mat.userData.ghost as DissolveUniform;
+}
+
 // Reads the perception engine's output and animates each object's dissolve.
 export class DissolveRenderer {
   // POV: the world looks normal, everything fully solid.
@@ -132,24 +152,28 @@ export class DissolveRenderer {
     for (const p of items) {
       uniformOf(p).value = 0;
       hazeOf(p).value = 0;
+      ghostOf(p).value = 0;
       p.mesh.visible = true;
     }
   }
 
-  // Replay: objects he heard fade into a hazy state (quick), and out again (slow).
-  // Seeing them makes them solid; the shader takes whichever is more present.
-  updateHaze(items: readonly Perceivable[], dt: number, time: number): void {
+  // Replay: objects he heard (hazy) or smelled (ghostly) fade in quickly and out slowly.
+  // Seeing them makes them solid; the shader takes whichever is most present.
+  updateSenses(items: readonly Perceivable[], dt: number, time: number): void {
     sharedDissolveUniforms.uTime.value = time;
     const { appearSeconds, vanishSeconds } = TUNING.dissolve;
     for (const p of items) {
       const h = hazeOf(p);
       if (p.sensed.sound) h.value = Math.min(1, h.value + dt / appearSeconds);
       else h.value = Math.max(0, h.value - dt / vanishSeconds);
+      const g = ghostOf(p);
+      if (p.sensed.smell) g.value = Math.min(1, g.value + dt / appearSeconds);
+      else g.value = Math.max(0, g.value - dt / vanishSeconds);
     }
   }
 
   isHazy(p: Perceivable): boolean {
-    return hazeOf(p).value > 0;
+    return hazeOf(p).value > 0 || ghostOf(p).value > 0;
   }
 
   // Per-pixel replay: the shader decides each pixel; here we only skip drawing

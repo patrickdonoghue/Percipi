@@ -3,7 +3,7 @@
 
 import { TUNING } from '../tuning';
 
-export type SoundName = 'alarm' | 'bark';
+export type SoundName = 'alarm' | 'bark' | 'sizzle';
 
 // Digital alarm clock: four quick beeps, then a pause (one 1-second loop).
 function alarm(rate: number): Float32Array<ArrayBuffer> {
@@ -54,6 +54,27 @@ function bark(rate: number): Float32Array<ArrayBuffer> {
   return out;
 }
 
+// Frying bacon: a soft hiss with random crackles (a 2-second loop).
+function sizzle(rate: number): Float32Array<ArrayBuffer> {
+  const out = new Float32Array(Math.round(rate * 2));
+  let prev = 0;
+  for (let i = 0; i < out.length; i++) {
+    const n = Math.random() * 2 - 1;
+    const hiss = n - prev; // brighter, hissy noise
+    prev = n;
+    out[i] = hiss * 0.08;
+  }
+  for (let c = 0; c < 70; c++) {
+    const start = Math.floor(Math.random() * (out.length - rate * 0.02));
+    const amp = 0.15 + Math.random() * 0.35;
+    const len = Math.floor(rate * (0.002 + Math.random() * 0.01));
+    for (let i = 0; i < len; i++) out[start + i]! += (Math.random() * 2 - 1) * amp * Math.exp((-i / len) * 5);
+  }
+  return out;
+}
+
 export function synthesize(name: SoundName, rate: number): Float32Array<ArrayBuffer> {
-  return name === 'alarm' ? alarm(rate) : bark(rate);
+  if (name === 'alarm') return alarm(rate);
+  if (name === 'sizzle') return sizzle(rate);
+  return bark(rate);
 }

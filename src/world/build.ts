@@ -38,7 +38,7 @@ export function makePerceivable(id: string, kind: Kind, mesh: Mesh, dynamic = fa
     dynamic,
     localSamples: [],
     samples: [],
-    sensed: { sight: false, sound: false },
+    sensed: { sight: false, sound: false, smell: false },
     present: false,
   };
 }

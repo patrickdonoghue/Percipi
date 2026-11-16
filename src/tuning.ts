@@ -110,6 +110,11 @@ export const TUNING = {
       pulseSeconds: 1.0, // one ripple per ring cycle
       beepHz: 2100,
     },
+    sizzle: {
+      radius: 3.5, // small: heard only close to the kitchen (the smell travels further)
+      volume: 0.25,
+      pulseSeconds: 1.0,
+    },
     dog: {
       radius: 30,
       volume: 0.9,
@@ -118,6 +123,28 @@ export const TUNING = {
       barkTimes: [0, 0.6, 1.2],
       startDelay: 0.4, // seconds after entering the living area
     },
+  },
+
+  smell: {
+    puffs: 64, // how many smell puffs can exist at once
+    emitSeconds: 0.3, // a new puff every this many seconds
+    lifeSeconds: 18, // how long a puff lasts
+    startRadius: 0.35, // metres
+    growth: 0.07, // metres per second a puff spreads
+    maxRadius: 1.4,
+    flowSpeed: 0.45, // m/s smell spreads outwards from the source (through open space and doorways)
+    flowCell: 0.25, // metres: grid size of the flow map
+    wander: 0.35, // m/s of random swirl
+    damping: 0.6, // how quickly swirl settles back to the draught
+    height: 1.35, // metres: puffs float around nose height
+    heightSpread: 0.3,
+    decay: 9, // seconds for a puff's strength to fall to about a third
+    prewarmSeconds: 18, // the bacon has been frying this long before he wakes
+    noticeStrength: 0.15, // weaker than this and he doesn't notice it
+    lingerSeconds: 3, // smell stays with him this long after the last whiff
+    fragmentRadius: 1.0, // metres: nearby objects (the counter) flicker with the source
+    recordHz: 5, // plume snapshots per second (for the replay)
+    stepSeconds: 1 / 30, // simulation step
   },
 
   replay: {
@@ -140,6 +167,15 @@ export const TUNING = {
       opacity: 0.6,
       color: [0.75, 0.86, 1.0] as const, // pale blue, distinct from the warm dissolve edge
       height: 0.06, // metres above the floor
+    },
+    smellTrail: {
+      color: [1.0, 0.76, 0.45] as const, // warm amber wisps
+      opacity: 0.13,
+      sizeScale: 0.6, // wisps are drawn this fraction of the puff's smell radius
+    },
+    ghost: {
+      level: 0.4, // how dissolved a smelled-but-unseen object looks
+      flickerSpeed: 2.5, // how fast it flickers in and out
     },
     haze: {
       level: 0.55, // how dissolved a heard-but-unseen object looks (0 solid .. 1 gone)

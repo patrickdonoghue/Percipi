@@ -1,6 +1,7 @@
 import { Vector3 } from 'three';
 import { DEG, TUNING } from '../tuning';
 import { SightSystem } from './sight';
+import type { SmellField } from './smell';
 import type { SoundField } from './sound';
 import type { Perceivable } from './tags';
 
@@ -13,13 +14,18 @@ export class PerceptionEngine {
   constructor(
     private readonly items: readonly Perceivable[],
     private readonly sound: SoundField,
+    private readonly smell: SmellField,
   ) {
     this.sight = new SightSystem(items);
   }
 
-  update(eye: Vector3, forward: Vector3, time: number): void {
+  private readonly nose = new Vector3();
+
+  update(eye: Vector3, forward: Vector3, time: number, dt: number): void {
     this.sight.update(eye, forward, this.cosHalfAngle);
     this.sound.update(time, eye);
+    this.nose.copy(eye).y -= 0.1;
+    this.smell.update(dt, time, this.nose);
     for (const p of this.items) {
       // Never accumulate: an object exists only while it is sensed.
       p.present = p.sensed.sight;

@@ -12,11 +12,14 @@ import { SOUND_SOURCES } from './sounds';
 
 // Runs the walk's sound moments:
 // - the alarm clock rings from waking until he switches it off
+// - the bacon sizzles in the kitchen the whole time (quiet, heard only nearby)
 // - the dog in the backyard barks a few times the first time he enters the living area
 // Each sound plays as audio, sends ripples into the perception engine, and is recorded.
 export class Director {
   private readonly alarm: Perceivable;
   private readonly dog: Perceivable;
+  private readonly bacon: Perceivable;
+  private nextSizzlePulse = 0;
   private alarmSound: SoundHandle | null = null;
   private nextAlarmPulse = 0;
   private dogTriggered = false;
@@ -38,6 +41,7 @@ export class Director {
     };
     this.alarm = find(SOUND_SOURCES.alarm.itemId);
     this.dog = find(SOUND_SOURCES.dog.itemId);
+    this.bacon = find(SOUND_SOURCES.bacon.itemId);
 
     const alarmPos = this.alarm.mesh.position;
     const isRinging = () => this.alarmSound !== null;
@@ -61,6 +65,11 @@ export class Director {
     });
     this.log(this.alarm, 'alarm', 'start');
     this.nextAlarmPulse = time;
+
+    const z = TUNING.sound.sizzle;
+    this.audio.play('sizzle', this.positionOf(this.bacon), { loop: true, volume: z.volume, radius: z.radius });
+    this.log(this.bacon, 'sizzle', 'start');
+    this.nextSizzlePulse = time;
   }
 
   update(time: number, x: number, z: number): void {
@@ -68,6 +77,10 @@ export class Director {
     if (this.alarmSound && time >= this.nextAlarmPulse) {
       this.pulse(this.alarm, 'alarm');
       this.nextAlarmPulse += TUNING.sound.alarm.pulseSeconds;
+    }
+    if (time >= this.nextSizzlePulse) {
+      this.pulse(this.bacon, 'sizzle');
+      this.nextSizzlePulse += TUNING.sound.sizzle.pulseSeconds;
     }
 
     const d = TUNING.sound.dog;

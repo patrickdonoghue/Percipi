@@ -63,6 +63,7 @@ export class Playback {
       p.present = bit(frame.seen, i);
       p.sensed.sight = p.present;
       p.sensed.sound = bit(frame.heard, i);
+      p.sensed.smell = bit(frame.smelled, i);
     });
     this.applyDoors(frame);
   }
