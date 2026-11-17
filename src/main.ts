@@ -15,6 +15,7 @@ import { Eyes } from './eyes';
 import { setupWake } from './wake';
 import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
+import { applyModels } from './world/models';
 
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, TUNING.render.maxPixelRatio));
@@ -33,6 +34,8 @@ fill.position.set(...TUNING.render.fillPosition);
 scene.add(fill);
 
 const world = buildGreybox();
+// Swap in the furniture models before anything measures the objects (sight, smell).
+await applyModels(world.items);
 scene.add(world.root);
 
 const soundField = new SoundField(world.items);
