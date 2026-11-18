@@ -15,7 +15,7 @@ export class Dollhouse {
 
   constructor(items: readonly Perceivable[]) {
     this.pieces = items
-      .filter((p) => p.kind === 'wall' || p.kind === 'door')
+      .filter((p) => p.kind === 'wall' || p.kind === 'door' || p.kind === 'glass')
       .map((p) => ({
         p,
         minY: p.mesh.position.y - p.mesh.scale.y / 2,

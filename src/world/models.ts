@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Color, Matrix4, Mesh, MeshStandardMaterial, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, Color, Matrix4, Mesh, MeshStandardMaterial, Object3D, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Perceivable } from '../perception/tags';
@@ -20,15 +20,22 @@ const FACE_YAW: Record<Direction, number> = { '+z': 0, '+x': Math.PI / 2, '-x': 
 const loader = new GLTFLoader();
 const cache = new Map<string, Promise<BufferGeometry>>();
 
-// One file -> one geometry in the model's own space, with vertex colours.
-function loadMerged(file: string): Promise<BufferGeometry> {
-  let p = cache.get(file);
+function insideNode(o: Object3D, name: string): boolean {
+  for (let n: Object3D | null = o; n; n = n.parent) if (n.name === name) return true;
+  return false;
+}
+
+// One file (or one named part of it) -> one geometry in the model's own space, with vertex colours.
+function loadMerged(file: string, node?: string): Promise<BufferGeometry> {
+  const key = node ? `${file}#${node}` : file;
+  let p = cache.get(key);
   if (!p) {
     p = loader.loadAsync(`models/${file}.glb`).then((gltf) => {
       gltf.scene.updateMatrixWorld(true);
       const parts: BufferGeometry[] = [];
       gltf.scene.traverse((o) => {
         if (!(o instanceof Mesh)) return;
+        if (node && !insideNode(o, node)) return;
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         const src = (o.geometry as BufferGeometry).toNonIndexed();
         // Split by material group so each part gets its own colour.
@@ -48,18 +55,18 @@ function loadMerged(file: string): Promise<BufferGeometry> {
           parts.push(g);
         }
       });
-      const merged = mergeGeometries(parts);
-      if (!merged) throw new Error(`could not merge ${file}`);
+      const merged = parts.length ? mergeGeometries(parts) : null;
+      if (!merged) throw new Error(`could not merge ${key}`);
       return merged;
     });
-    cache.set(file, p);
+    cache.set(key, p);
   }
   return p;
 }
 
 // Lay the files side by side along the model's own x, face them, and fit to the unit cube.
 async function buildModel(spec: ModelSpec): Promise<BufferGeometry> {
-  const pieces = await Promise.all(spec.files.map(loadMerged));
+  const pieces = await Promise.all(spec.files.map((f) => loadMerged(f, spec.node)));
   let x = 0;
   const placed = pieces.map((piece) => {
     const g = piece.clone();

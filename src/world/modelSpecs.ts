@@ -5,9 +5,11 @@ import type { Direction } from './door';
 // counter can be a row of cabinets with the stove where the bacon is.
 // `face` is the way the model's front points ('-z' = up the plan, towards the backyard).
 // Missing here = stays a grey box (trees, hedges, dog, caller, bacon pan, porch posts).
+// Walls, floors and windows are built from the plan (see surfaces.ts), not from models.
 export interface ModelSpec {
   files: string[];
   face: Direction;
+  node?: string; // use only this part of the model (e.g. the door leaf without its frame)
 }
 
 const CAB = 'kitchenCabinet';
@@ -33,4 +35,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
   bath_vanity: { files: ['bathroomCabinetDrawer', 'bathroomCabinetDrawer'], face: '+z' },
   bath_toilet: { files: ['toilet'], face: '+z' },
   bath_tub: { files: ['bathtub'], face: '-x' },
+  // Doors: just the leaf from the kit's doorways. Outside doors have a glass panel.
+  door_front: { files: ['doorwayFront'], node: 'door', face: '+z' },
+  door_patio: { files: ['doorwayFront'], node: 'door', face: '+z' },
+  door_bed2: { files: ['doorway'], node: 'door', face: '+z' },
+  door_bed1: { files: ['doorway'], node: 'door', face: '+z' },
+  door_bath: { files: ['doorway'], node: 'door', face: '+z' },
 };

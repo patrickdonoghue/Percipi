@@ -8,7 +8,7 @@ export interface SenseTags {
   smell?: true; // gives off a smell plume
 }
 
-export type Kind = 'floor' | 'wall' | 'furniture' | 'door' | 'prop';
+export type Kind = 'floor' | 'wall' | 'furniture' | 'door' | 'prop' | 'glass';
 
 export interface Perceivable {
   id: string;

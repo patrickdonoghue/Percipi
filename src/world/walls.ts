@@ -1,5 +1,6 @@
 import { TUNING } from '../tuning';
 import type { BoxSpec } from './build';
+import type { Direction } from './door';
 
 // A gap in a wall, measured in metres along the wall from its start point.
 // Doorway: bottom 0, top = door height. Window: bottom = sill, top = head.
@@ -8,6 +9,7 @@ export interface Gap {
   to: number;
   bottom?: number;
   top?: number;
+  glass?: boolean; // a window: filled with a frame and pane
 }
 
 export interface WallDef {
@@ -16,6 +18,8 @@ export interface WallDef {
   b: [number, number]; // end (x, z); walls must run along x or z
   gaps?: Gap[];
   height?: number; // defaults to the house wall height (fences are lower)
+  outward?: Direction; // outer walls: which side faces outdoors
+  color?: number; // overrides the wall paint (the fence)
 }
 
 export const doorway = (from: number, to: number): Gap => ({ from, to, bottom: 0, top: TUNING.house.doorHeight });
@@ -24,6 +28,7 @@ export const windowGap = (from: number, to: number): Gap => ({
   to,
   bottom: TUNING.house.windowSill,
   top: TUNING.house.windowHead,
+  glass: true,
 });
 
 // Turn one wall line into box pieces: solid runs (split into short segments)
@@ -38,7 +43,7 @@ export function buildWall(def: WallDef): BoxSpec[] {
   const sign = Math.sign(end - start);
   const length = Math.abs(end - start);
 
-  const pieces: { t0: number; t1: number; y0: number; y1: number }[] = [];
+  const pieces: { t0: number; t1: number; y0: number; y1: number; glass?: boolean }[] = [];
   const gaps = [...(def.gaps ?? [])].sort((g, h) => g.from - h.from);
 
   const addSolid = (t0: number, t1: number) => {
@@ -56,6 +61,7 @@ export function buildWall(def: WallDef): BoxSpec[] {
     const top = g.top ?? H;
     if (bottom > 0) pieces.push({ t0: g.from, t1: g.to, y0: 0, y1: bottom });
     if (top < H) pieces.push({ t0: g.from, t1: g.to, y0: top, y1: H });
+    if (g.glass) pieces.push({ t0: g.from, t1: g.to, y0: bottom, y1: top, glass: true });
     cursor = g.to;
   }
   addSolid(cursor, length);
@@ -68,9 +74,16 @@ export function buildWall(def: WallDef): BoxSpec[] {
     const u1 = start + sign * t1;
     const lo = Math.min(u0, u1);
     const hi = Math.max(u0, u1);
+    const id = p.glass ? `${def.id}_window_${i}` : `${def.id}_${i}`;
+    const kind = p.glass ? 'glass' : 'wall';
+    const half = p.glass ? TUNING.render.window.frameDepth / 2 : T / 2;
     const spec: BoxSpec = alongX
-      ? { id: `${def.id}_${i}`, kind: 'wall', min: [lo, p.y0, fixed - T / 2], max: [hi, p.y1, fixed + T / 2] }
-      : { id: `${def.id}_${i}`, kind: 'wall', min: [fixed - T / 2, p.y0, lo], max: [fixed + T / 2, p.y1, hi] };
+      ? { id, kind, min: [lo, p.y0, fixed - half], max: [hi, p.y1, fixed + half] }
+      : { id, kind, min: [fixed - half, p.y0, lo], max: [fixed + half, p.y1, hi] };
+    if (!p.glass) {
+      if (def.outward) spec.outward = def.outward;
+      if (def.color !== undefined) spec.color = def.color;
+    }
     return spec;
   });
 }

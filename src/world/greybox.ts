@@ -16,7 +16,7 @@ export interface GreyboxWorld {
   spawn: typeof SPAWN;
 }
 
-function floorTiles(id: string, r: Rect, top = 0): BoxSpec[] {
+function floorTiles(id: string, r: Rect, color: number, top = 0): BoxSpec[] {
   const { floorTile: size, floorThickness: th } = TUNING.house;
   const tiles: BoxSpec[] = [];
   let i = 0;
@@ -25,6 +25,7 @@ function floorTiles(id: string, r: Rect, top = 0): BoxSpec[] {
       tiles.push({
         id: `${id}_${i++}`,
         kind: 'floor',
+        color,
         min: [x, -th, z],
         max: [Math.min(x + size, r.maxX), top, Math.min(z + size, r.maxZ)],
       });
@@ -36,7 +37,7 @@ function floorTiles(id: string, r: Rect, top = 0): BoxSpec[] {
 // Walking blockers: boxes that overlap body height (not lintels, not floors).
 function isCollider(s: BoxSpec): boolean {
   const { collideBelow, collideAbove } = TUNING.player;
-  return s.kind !== 'floor' && s.min[1] < collideBelow && s.max[1] > collideAbove;
+  return s.kind !== 'floor' && s.kind !== 'glass' && s.min[1] < collideBelow && s.max[1] > collideAbove;
 }
 
 export function buildGreybox(): GreyboxWorld {
@@ -53,7 +54,7 @@ export function buildGreybox(): GreyboxWorld {
     }
   };
 
-  for (const fl of FLOORS) for (const t of floorTiles(fl.id, fl.rect, fl.top)) add(t, fl.outdoor);
+  for (const fl of FLOORS) for (const t of floorTiles(fl.id, fl.rect, fl.color, fl.top)) add(t, fl.outdoor);
   for (const w of WALLS) for (const piece of buildWall(w)) add(piece);
   for (const spec of FURNITURE) add(spec);
 

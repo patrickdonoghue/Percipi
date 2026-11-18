@@ -7,6 +7,9 @@ import type { BoxSpec } from './build';
 import type { DoorDef } from './door';
 import { boxPx, chunkedBoxPx, doorPx, mx, mz, rectPx, wallPx } from './plan';
 import type { WallDef } from './walls';
+import { TUNING } from '../tuning';
+
+const C = TUNING.render.colors;
 
 export interface Rect {
   minX: number;
@@ -20,6 +23,7 @@ export interface FloorDef {
   rect: Rect;
   outdoor: boolean;
   top?: number; // raised slabs (patio, porch, sidewalk), metres
+  color: number;
 }
 
 // Bedroom #1, standing beside the bed, facing the bedroom door (north-west).
@@ -40,27 +44,29 @@ const HEDGE_PIECE = 2.0;
 
 export const FLOORS: FloorDef[] = [
   // Inside
-  { id: 'living_floor', rect: LIVING_AREA, outdoor: false }, // kitchen + living, open plan
-  { id: 'hall_floor', rect: rectPx(897, 893, 1088, 1043), outdoor: false },
-  { id: 'bed2_floor', rect: rectPx(990, 589, 1376, 893), outdoor: false },
-  { id: 'bath_floor', rect: rectPx(1088, 893, 1376, 1043), outdoor: false },
-  { id: 'bed1_floor', rect: rectPx(990, 1043, 1376, 1350), outdoor: false },
+  // Kitchen + living are open plan; the kitchen end is tiled, the rest is wood.
+  { id: 'kitchen_floor', rect: rectPx(504, 589, 897, 950), outdoor: false, color: C.tileFloor },
+  { id: 'living_floor', rect: rectPx(504, 950, 897, 1350), outdoor: false, color: C.woodFloor },
+  { id: 'hall_floor', rect: rectPx(897, 893, 1088, 1043), outdoor: false, color: C.woodFloor },
+  { id: 'bed2_floor', rect: rectPx(990, 589, 1376, 893), outdoor: false, color: C.woodFloor },
+  { id: 'bath_floor', rect: rectPx(1088, 893, 1376, 1043), outdoor: false, color: C.tileFloor },
+  { id: 'bed1_floor', rect: rectPx(990, 1043, 1376, 1350), outdoor: false, color: C.woodFloor },
   // Outside
-  { id: 'backyard_floor', rect: rectPx(203, 230, 1740, 589), outdoor: true },
-  { id: 'westyard_floor', rect: rectPx(203, 589, 504, 1350), outdoor: true },
-  { id: 'eastyard_floor', rect: rectPx(1376, 589, 1740, 1350), outdoor: true },
-  { id: 'frontyard_floor', rect: rectPx(203, 1350, 1740, 1645), outdoor: true },
-  { id: 'patio_floor', rect: rectPx(497, 417, 900, 582), outdoor: true, top: 0.1 },
-  { id: 'porch_floor', rect: rectPx(560, 1357, 910, 1522), outdoor: true, top: 0.1 },
-  { id: 'sidewalk_floor', rect: rectPx(0, 1645, 1918, 1790), outdoor: true, top: 0.02 },
+  { id: 'backyard_floor', rect: rectPx(203, 230, 1740, 589), outdoor: true, color: C.grass },
+  { id: 'westyard_floor', rect: rectPx(203, 589, 504, 1350), outdoor: true, color: C.grass },
+  { id: 'eastyard_floor', rect: rectPx(1376, 589, 1740, 1350), outdoor: true, color: C.grass },
+  { id: 'frontyard_floor', rect: rectPx(203, 1350, 1740, 1645), outdoor: true, color: C.grass },
+  { id: 'patio_floor', rect: rectPx(497, 417, 900, 582), outdoor: true, top: 0.1, color: C.concrete },
+  { id: 'porch_floor', rect: rectPx(560, 1357, 910, 1522), outdoor: true, top: 0.1, color: C.concrete },
+  { id: 'sidewalk_floor', rect: rectPx(0, 1645, 1918, 1790), outdoor: true, top: 0.02, color: C.concrete },
 ];
 
 export const WALLS: WallDef[] = [
   // Outer walls
-  wallPx('wall_north', [504, 589], [1376, 589], [['window', 557, 650], ['door', 745, 880], ['window', 1113, 1250]]),
-  wallPx('wall_south', [504, 1350], [1376, 1350], [['window', 590, 722], ['door', 800, 880], ['window', 1113, 1250]]),
-  wallPx('wall_west', [504, 589], [504, 1350], [['window', 940, 1075]]),
-  wallPx('wall_east', [1376, 589], [1376, 1350], [['window', 940, 1000]]),
+  { ...wallPx('wall_north', [504, 589], [1376, 589], [['window', 557, 650], ['door', 745, 880], ['window', 1113, 1250]]), outward: '-z' },
+  { ...wallPx('wall_south', [504, 1350], [1376, 1350], [['window', 590, 722], ['door', 800, 880], ['window', 1113, 1250]]), outward: '+z' },
+  { ...wallPx('wall_west', [504, 589], [504, 1350], [['window', 940, 1075]]), outward: '-x' },
+  { ...wallPx('wall_east', [1376, 589], [1376, 1350], [['window', 940, 1000]]), outward: '+x' },
   // Closet column (between the living area and the bedrooms), open to the hall in the middle
   wallPx('wall_closets_north_w', [897, 589], [897, 893]),
   wallPx('wall_closets_south_w', [897, 1043], [897, 1350]),
@@ -71,9 +77,9 @@ export const WALLS: WallDef[] = [
   wallPx('wall_hall_south', [897, 1043], [1376, 1043], [['door', 990, 1080]]),
   wallPx('wall_bath_west', [1088, 893], [1088, 1043], [['door', 945, 1035]]),
   // Yard fence (open to the sidewalk at the front)
-  wallPx('fence_west', [203, 230], [203, 1615], [], FENCE_HEIGHT),
-  wallPx('fence_north', [203, 230], [1740, 230], [], FENCE_HEIGHT),
-  wallPx('fence_east', [1740, 230], [1740, 1603], [], FENCE_HEIGHT),
+  { ...wallPx('fence_west', [203, 230], [203, 1615], [], FENCE_HEIGHT), color: C.fence },
+  { ...wallPx('fence_north', [203, 230], [1740, 230], [], FENCE_HEIGHT), color: C.fence },
+  { ...wallPx('fence_east', [1740, 230], [1740, 1603], [], FENCE_HEIGHT), color: C.fence },
 ];
 
 export const DOORS: DoorDef[] = [

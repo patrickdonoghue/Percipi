@@ -1,5 +1,5 @@
 import './style.css';
-import { AmbientLight, Clock, DirectionalLight, Scene, WebGLRenderer } from 'three';
+import { AmbientLight, Clock, Color, DirectionalLight, Scene, WebGLRenderer } from 'three';
 import { TUNING } from './tuning';
 import { AudioOut } from './audio/audioOut';
 import { Hud } from './hud';
@@ -60,8 +60,12 @@ const lights = [
   { light: fill, full: TUNING.render.fillIntensity },
 ];
 // Morning light: dim when his eyes open, rising to full sunlight.
+// In the walk the sky is a normal sky; in the replay it is the void (nothing unperceived exists).
+const sky = new Color(TUNING.render.skyColor);
+const skyNow = new Color();
 const setDaylight = (level: number) => {
   for (const l of lights) l.light.intensity = l.full * level;
+  scene.background = skyNow.copy(sky).multiplyScalar(level);
 };
 let replay: ReplayMode | null = null;
 
@@ -133,6 +137,7 @@ renderer.setAnimationLoop(() => {
     if (recorder.duration >= TUNING.replay.maxRecordSeconds) endWalk();
   } else if (mode === 'replay' && replay) {
     setDaylight(1);
+    scene.background = null;
     replay.update(dt);
   }
 

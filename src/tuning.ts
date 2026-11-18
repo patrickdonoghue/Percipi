@@ -72,6 +72,7 @@ export const TUNING = {
     sunPosition: [7, 14, 3] as const, // key light: angled so each wall direction gets its own shade
     fillIntensity: 0.6,
     fillPosition: [-4, 6, -9] as const,
+    skyColor: 0xa9cbe6, // walk only; the replay's background stays black
     colors: {
       floor: 0x8a8a8a,
       outdoorFloor: 0x6f736f,
@@ -79,6 +80,23 @@ export const TUNING = {
       furniture: 0x9c9c9c,
       door: 0x8c8580,
       prop: 0xb0b0b0,
+      glass: 0xffffff, // windows are coloured by their frame and pane (below)
+      // The house (Phase 2 palette)
+      woodFloor: 0xb38b63,
+      tileFloor: 0xd8d4cc,
+      grass: 0x6f9a52,
+      concrete: 0xaaa69f,
+      wallInside: 0xece6da, // warm off-white paint
+      wallOutside: 0x9fb0bd, // blue-grey siding, so the house reads clearly from above
+      fence: 0x9b7653,
+    },
+    window: {
+      frameColor: 0xf4f1ea,
+      frameWidth: 0.06, // metres
+      frameDepth: 0.1, // metres, front to back
+      glassColor: [0.78, 0.9, 0.97] as const,
+      glassOpacity: 0.22,
+      glassThickness: 0.02, // metres
     },
   },
 

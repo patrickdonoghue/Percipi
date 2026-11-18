@@ -91,7 +91,8 @@ export class SightHistory {
     const items = this.world.items;
     const wasVisible = items.map((p) => p.mesh.visible);
     const figureVisible = this.character.root.visible;
-    for (const p of items) p.mesh.visible = true;
+    // Glass is left out: the eyes see through it.
+    for (const p of items) p.mesh.visible = p.kind !== 'glass';
     this.character.root.visible = false;
     this.dollhouse.withFullWalls(() => {
       this.world.root.updateMatrixWorld(true);
