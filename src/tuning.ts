@@ -53,6 +53,7 @@ export const TUNING = {
     windowSill: 1.0,
     windowHead: 2.1,
     maxWallSegment: 2.0, // long walls are split into pieces this long
+    cornerInset: 0.003, // metres: wall ends stop just inside the wall they meet (no flicker)
     floorTile: 2.0,
     floorThickness: 0.05,
   },
