@@ -2,6 +2,7 @@ import { AnimationClip, AnimationMixer, Box3, Group, Mesh, MeshStandardMaterial,
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { createDissolveMaterial } from '../render/dissolve';
+import { recolorTexture, type RecolorRule } from '../render/recolor';
 import type { Perceivable } from '../perception/tags';
 
 // Animated models (the man and the dog, from Sketchfab; see CREDITS.md).
@@ -68,6 +69,8 @@ export interface AnimatedProp {
   model: AnimatedName;
   clip: string; // looping animation it plays
   yawDeg: number; // which way it faces (0 = +z, 90 = +x)
+  height?: number; // metres; if set, scaled to this height (else fitted inside its box)
+  recolor?: readonly RecolorRule[]; // repaint its texture (a second person in different clothes)
 }
 
 // Put an animated model inside a perceivable object's box. The box stays as the
@@ -82,7 +85,7 @@ export function attachAnimated(p: Perceivable, spec: AnimatedProp): boolean {
     const old = o.material as MeshStandardMaterial;
     const mat = createDissolveMaterial(0xffffff, 0, boxMat);
     mat.color.copy(old.color);
-    mat.map = old.map;
+    mat.map = old.map && spec.recolor ? recolorTexture(old.map, spec.recolor) : old.map;
     mat.side = old.side;
     o.material = mat;
   });
@@ -97,7 +100,7 @@ export function attachAnimated(p: Perceivable, spec: AnimatedProp): boolean {
   turn.add(inst.root);
   turn.updateMatrixWorld(true);
   const turned = new Box3().setFromObject(turn).getSize(new Vector3());
-  turn.scale.setScalar(Math.min(s.x / turned.x, s.y / turned.y, s.z / turned.z));
+  turn.scale.setScalar(spec.height ? spec.height / turned.y : Math.min(s.x / turned.x, s.y / turned.y, s.z / turned.z));
   holder.add(turn);
   p.mesh.add(holder);
   boxMat.visible = false; // the model is drawn instead of the box

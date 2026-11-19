@@ -218,6 +218,16 @@ export const TUNING = {
     },
   },
 
+  caller: {
+    height: 2.05, // metres: about the height of a door, so he reads clearly from the house
+    // His clothes are repainted so he isn't mistaken for the main figure:
+    // light blue shirt -> red, blue jeans -> brown.
+    recolor: [
+      { hueMin: 170, hueMax: 205, toHue: 2, sat: 0.9, light: 0.7 },
+      { hueMin: 205, hueMax: 250, toHue: 30, sat: 0.6, light: 1.2 },
+    ],
+  },
+
   character: {
     height: 1.78, // metres, the replay figure (eyes end up near player.eyeHeight)
     color: 0xf0b37e, // gaze cone

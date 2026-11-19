@@ -1,3 +1,4 @@
+import { TUNING } from '../tuning';
 import type { AnimatedProp } from './animated';
 import type { Direction } from './door';
 
@@ -47,5 +48,6 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 // Animated models placed in an object's box (see animated.ts).
 export const ANIMATED_PROPS: Record<string, AnimatedProp> = {
   yard_dog: { model: 'dog', clip: 'Idle1', yawDeg: 90 }, // side-on, nose towards the patio door
-  yard_caller: { model: 'man', clip: 'idle', yawDeg: -45 }, // facing the house from the corner
+  // Facing the house from the corner, in different clothes from the main figure.
+  yard_caller: { model: 'man', clip: 'idle', yawDeg: -45, height: TUNING.caller.height, recolor: TUNING.caller.recolor },
 };
