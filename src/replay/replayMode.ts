@@ -14,6 +14,7 @@ import { Ripples } from './ripples';
 import { SmellTrails } from './smellTrails';
 import { SightHistory } from './sightHistory';
 import { ReplayBar } from './ui';
+import { lookTarget } from '../world/headTrack';
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -212,6 +213,7 @@ export class ReplayMode {
     const f = this.playback.frameAt(t);
     if (!f) return;
     this.ear.set(f.x, TUNING.player.eyeHeight, f.z);
+    lookTarget.copy(this.ear); // the caller watches where his head was
     this.earForward.set(-Math.sin(f.yaw) * Math.cos(f.pitch), Math.sin(f.pitch), -Math.cos(f.yaw) * Math.cos(f.pitch));
   }
 

@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { createDissolveMaterial } from '../render/dissolve';
 import { recolorTexture, type RecolorRule } from '../render/recolor';
+import { addHeadTracker } from './headTrack';
 import type { Perceivable } from '../perception/tags';
 
 // Animated models (the man and the dog, from Sketchfab; see CREDITS.md).
@@ -71,6 +72,7 @@ export interface AnimatedProp {
   yawDeg: number; // which way it faces (0 = +z, 90 = +x)
   height?: number; // metres; if set, scaled to this height (else fitted inside its box)
   recolor?: readonly RecolorRule[]; // repaint its texture (a second person in different clothes)
+  watchPlayer?: boolean; // turns his head to follow the player (see headTrack.ts)
 }
 
 // Put an animated model inside a perceivable object's box. The box stays as the
@@ -107,5 +109,6 @@ export function attachAnimated(p: Perceivable, spec: AnimatedProp): boolean {
 
   const clip = inst.clip(spec.clip);
   if (clip) inst.mixer.clipAction(clip).play();
+  if (spec.watchPlayer) addHeadTracker(inst.root);
   return true;
 }

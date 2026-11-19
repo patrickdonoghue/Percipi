@@ -226,6 +226,14 @@ export const TUNING = {
       { hueMin: 170, hueMax: 205, toHue: 2, sat: 0.9, light: 0.7 },
       { hueMin: 205, hueMax: 250, toHue: 30, sat: 0.6, light: 1.2 },
     ],
+    // He turns his head to watch you, within what a neck can comfortably do.
+    look: {
+      maxYawDeg: 75, // left/right; beyond this he holds the furthest turn
+      maxUpDeg: 25,
+      maxDownDeg: 35,
+      turnRate: 4, // how quickly his gaze follows (higher = snappier)
+      shares: { spine: 0.2, neck: 0.35, head: 0.45 }, // how the turn is split between joints
+    },
   },
 
   character: {

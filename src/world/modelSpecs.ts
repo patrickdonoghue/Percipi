@@ -49,5 +49,5 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
 export const ANIMATED_PROPS: Record<string, AnimatedProp> = {
   yard_dog: { model: 'dog', clip: 'Idle1', yawDeg: 90 }, // side-on, nose towards the patio door
   // Facing the house from the corner, in different clothes from the main figure.
-  yard_caller: { model: 'man', clip: 'idle', yawDeg: -45, height: TUNING.caller.height, recolor: TUNING.caller.recolor },
+  yard_caller: { model: 'man', clip: 'idle', yawDeg: -45, height: TUNING.caller.height, recolor: TUNING.caller.recolor, watchPlayer: true },
 };

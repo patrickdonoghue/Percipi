@@ -17,6 +17,7 @@ import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
 import { applyModels } from './world/models';
 import { updateAnimations } from './world/animated';
+import { lookTarget, updateHeadTracking } from './world/headTrack';
 
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, TUNING.render.maxPixelRatio));
@@ -128,6 +129,7 @@ renderer.setAnimationLoop(() => {
     scene.updateMatrixWorld();
     director.update(walkTime, pov.player.x, pov.player.z);
     audio.setListener(pov.camera.position, pov.forward());
+    lookTarget.copy(pov.camera.position); // the caller watches you
     // The engine decides what he senses; it is recorded, not shown. POV looks normal.
     engine.update(pov.camera.position, pov.forward(), walkTime, dt, eyes.isOpen);
     recorder.capture(walkTime, pov.pose, eyes.isOpen, world.doors, world.items);
@@ -143,6 +145,7 @@ renderer.setAnimationLoop(() => {
     replay.update(dt);
   }
 
+  updateHeadTracking(dt); // after the animations and the look target are set
   renderer.render(scene, replay ? replay.activeCamera : pov.camera);
 
   let seen = 0;
