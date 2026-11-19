@@ -219,10 +219,13 @@ export const TUNING = {
   },
 
   character: {
-    bodyRadius: 0.2,
-    bodyHeight: 1.45,
-    headRadius: 0.13,
-    color: 0xf0b37e,
+    height: 1.78, // metres, the replay figure (eyes end up near player.eyeHeight)
+    color: 0xf0b37e, // gaze cone
+    walkThreshold: 0.3, // m/s: slower than this he stands idle
+    jumpSpeed: 20, // m/s: faster than this is a scrub jump, not walking
+    blendRate: 6, // how quickly walk and idle blend into each other
+    maxStrideScale: 1.6, // walk animation can speed up to this much to match his pace
+    headTilt: 0.7, // how much of his look up/down shows as a head tilt
     gazeLength: 1.2, // faint cone showing where he is looking
     gazeRadius: 0.35,
     gazeOpacity: 0.22,

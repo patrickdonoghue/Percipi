@@ -7,8 +7,10 @@ export function setupWake(
   onTap: (isTouch: boolean) => void, // runs inside the tap/click itself (audio unlock, gyro permission)
 ): { disable: () => void } {
   const overlay = document.getElementById('wake')!;
+  const label = document.getElementById('wake-label')!;
+  const credits = overlay.querySelector('.credits');
   const isTouch = window.matchMedia('(pointer: coarse)').matches;
-  overlay.textContent = isTouch ? 'tap to wake up' : 'click to wake up';
+  label.textContent = isTouch ? 'tap to wake up' : 'click to wake up';
   let awake = false;
   let usedMouse = false;
   let disabled = false;
@@ -42,7 +44,8 @@ export function setupWake(
 
   document.addEventListener('pointerlockchange', () => {
     if (!disabled && usedMouse && document.pointerLockElement !== canvas) {
-      overlay.textContent = 'click to continue';
+      label.textContent = 'click to continue';
+      credits?.remove(); // only on the first screen
       overlay.classList.remove('hidden');
     }
   });

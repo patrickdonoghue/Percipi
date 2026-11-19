@@ -1,10 +1,11 @@
+import type { AnimatedProp } from './animated';
 import type { Direction } from './door';
 
 // Which model replaces which grey box (scene data, keyed by the ids in layout.ts).
 // `files` are laid side by side (left to right as you face the front), so a
 // counter can be a row of cabinets with the stove where the bacon is.
 // `face` is the way the model's front points ('-z' = up the plan, towards the backyard).
-// Missing here = stays a grey box (trees, hedges, dog, caller, bacon pan, porch posts).
+// Missing here = stays a grey box (trees, hedges, bacon pan, porch posts).
 // Walls, floors and windows are built from the plan (see surfaces.ts), not from models.
 export interface ModelSpec {
   files: string[];
@@ -41,4 +42,10 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
   door_bed2: { files: ['doorway'], node: 'door', face: '+z' },
   door_bed1: { files: ['doorway'], node: 'door', face: '+z' },
   door_bath: { files: ['doorway'], node: 'door', face: '+z' },
+};
+
+// Animated models placed in an object's box (see animated.ts).
+export const ANIMATED_PROPS: Record<string, AnimatedProp> = {
+  yard_dog: { model: 'dog', clip: 'Idle1', yawDeg: 90 }, // side-on, nose towards the patio door
+  yard_caller: { model: 'man', clip: 'idle', yawDeg: -45 }, // facing the house from the corner
 };

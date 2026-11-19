@@ -16,6 +16,7 @@ import { setupWake } from './wake';
 import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
 import { applyModels } from './world/models';
+import { updateAnimations } from './world/animated';
 
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, TUNING.render.maxPixelRatio));
@@ -119,6 +120,7 @@ const clock = new Clock();
 
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), TUNING.maxFrameSeconds);
+  updateAnimations(dt); // the dog, the caller, and his figure in the replay
 
   if (mode === 'pov') {
     walkTime += dt;

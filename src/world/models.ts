@@ -3,7 +3,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Perceivable } from '../perception/tags';
 import type { Direction } from './door';
-import { MODEL_SPECS, type ModelSpec } from './modelSpecs';
+import { attachAnimated, preloadAnimated } from './animated';
+import { ANIMATED_PROPS, MODEL_SPECS, type ModelSpec } from './modelSpecs';
 
 // Real furniture models (Patrick's Kenney kit in public/models).
 // Each object's grey box is a unit cube scaled and placed from the floor plan.
@@ -92,8 +93,15 @@ async function buildModel(spec: ModelSpec): Promise<BufferGeometry> {
 
 // Swap the grey boxes for models. Resolves once every model has loaded or failed.
 export async function applyModels(items: readonly Perceivable[]): Promise<void> {
-  await Promise.all(
-    items.map(async (p) => {
+  const animated = preloadAnimated(['man', 'dog']).then(() => {
+    for (const p of items) {
+      const spec = ANIMATED_PROPS[p.id];
+      if (spec) attachAnimated(p, spec);
+    }
+  });
+  await Promise.all([
+    animated,
+    ...items.map(async (p) => {
       const spec = MODEL_SPECS[p.id];
       if (!spec) return;
       try {
@@ -106,5 +114,5 @@ export async function applyModels(items: readonly Perceivable[]): Promise<void> 
         console.warn(`Percipi: keeping the grey box for ${p.id}`, err);
       }
     }),
-  );
+  ]);
 }

@@ -161,6 +161,8 @@ export class ReplayMode {
       this.bar.update(this.playback.time, this.playback.playing);
     }
 
+    this.character.update(dt);
+
     const t = this.phase === 'play' ? this.playback.time : this.playback.duration;
     const playing = this.phase === 'play';
 

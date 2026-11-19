@@ -40,6 +40,18 @@ canvas {
   display: none;
 }
 
+/* CC-BY credit for the models, small at the bottom of the start screen. */
+#wake .credits {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  text-align: center;
+  color: #666;
+  font: 0.7rem system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
 #hud {
   position: fixed;
   top: max(8px, env(safe-area-inset-top));

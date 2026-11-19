@@ -54,14 +54,17 @@ interface DissolveUniform {
 
 // `sightThickness`: extra per-pixel sight tolerance for solid slabs (walls, doors),
 // so the dollhouse-cut tops inside them count as seen along with their faces.
-export function createDissolveMaterial(color: number, sightThickness = 0): MeshStandardMaterial {
+// `shareWith`: another dissolve material whose state this one follows (the parts
+// of an animated model all dissolve together with their object).
+export function createDissolveMaterial(color: number, sightThickness = 0, shareWith?: MeshStandardMaterial): MeshStandardMaterial {
   const mat = new MeshStandardMaterial({ color: new Color(color), roughness: 0.9, metalness: 0 });
   const d = TUNING.dissolve;
-  const uDissolve: DissolveUniform = { value: 1 }; // start gone: nothing exists before waking
+  const shared = shareWith?.userData;
+  const uDissolve: DissolveUniform = (shared?.dissolve as DissolveUniform | undefined) ?? { value: 1 }; // start gone
   mat.userData.dissolve = uDissolve;
-  const uHaze: DissolveUniform = { value: 0 };
+  const uHaze: DissolveUniform = (shared?.haze as DissolveUniform | undefined) ?? { value: 0 };
   mat.userData.haze = uHaze;
-  const uGhost: DissolveUniform = { value: 0 };
+  const uGhost: DissolveUniform = (shared?.ghost as DissolveUniform | undefined) ?? { value: 0 };
   mat.userData.ghost = uGhost;
 
   mat.onBeforeCompile = (shader) => {
@@ -87,8 +90,9 @@ export function createDissolveMaterial(color: number, sightThickness = 0): MeshS
     shader.vertexShader =
       'varying vec3 vDissolvePos;\n' +
       shader.vertexShader.replace(
-        '#include <begin_vertex>',
-        '#include <begin_vertex>\nvDissolvePos = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+        // After skinning, so animated bodies dissolve where they actually are.
+        '#include <skinning_vertex>',
+        '#include <skinning_vertex>\nvDissolvePos = (modelMatrix * vec4(transformed, 1.0)).xyz;',
       );
 
     shader.fragmentShader =
