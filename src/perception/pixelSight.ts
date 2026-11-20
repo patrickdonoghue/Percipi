@@ -50,6 +50,8 @@ export const pixelSightUniforms = {
   uVanish: { value: TUNING.dissolve.vanishSeconds },
   uAtlasCols: { value: COLS },
   uAtlasRows: { value: ROWS },
+  uSoftEdges: { value: TUNING.pixelSight.softEdges ? 1 : 0 },
+  uCosInner: { value: Math.cos((TUNING.sight.coneHalfAngleDeg - TUNING.pixelSight.coneFeatherDeg) * DEG) },
 };
 
 // GLSL used by the dissolve shader: how dissolved is this world point?
@@ -76,45 +78,63 @@ uniform float uAppear;
 uniform float uVanish;
 uniform float uAtlasCols;
 uniform float uAtlasRows;
+uniform float uSoftEdges;
+uniform float uCosInner;
 
-bool sightLit(int i, vec3 p) {
-  vec3 d = p - uSlotEye[i];
-  float dist = length(d);
-  if (dist > uMaxDist) return false;
-  if (dist < 0.001) return true;
-  if (dot(d / dist, uSlotFwd[i]) < uCosHalf) return false;
-  vec4 clip = uSlotViewProj[i] * vec4(p, 1.0);
-  if (clip.w <= 0.0) return false;
-  vec2 ndc = clip.xy / clip.w;
-  if (abs(ndc.x) > 1.0 || abs(ndc.y) > 1.0) return false;
-  float tile = uSlotTile[i];
-  vec2 cell = vec2(mod(tile, uAtlasCols), floor(tile / uAtlasCols));
+// Depth test for one point of a snapshot tile: 1 = nothing was in front of it.
+float sightDepth(vec2 cell, vec2 ndc, float w) {
   vec2 uv = (cell + ndc * 0.5 + 0.5) / vec2(uAtlasCols, uAtlasRows);
   float z = texture2D(uSightAtlas, uv).r;
   float nearest = (uSightNear * uSightFar) / (uSightFar - z * (uSightFar - uSightNear));
-  return clip.w <= nearest + uSightBias + uSightBiasSlope * clip.w + uSightThickness;
+  return w <= nearest + uSightBias + uSightBiasSlope * w + uSightThickness ? 1.0 : 0.0;
+}
+
+// How visible point p was in snapshot i: 0 (not seen) .. 1 (clearly seen).
+// With soft edges on, the edge of his view cone is feathered, so the boundary
+// that sweeps across the room as he turns his head fades instead of cutting.
+// (The depth test itself stays a single sharp sample: blurring it made floors
+// seen at a shallow angle break up into dots.)
+float sightLit(int i, vec3 p) {
+  vec3 d = p - uSlotEye[i];
+  float dist = length(d);
+  if (dist > uMaxDist) return 0.0;
+  if (dist < 0.001) return 1.0;
+  float c = dot(d / dist, uSlotFwd[i]);
+  if (c < uCosHalf) return 0.0;
+  vec4 clip = uSlotViewProj[i] * vec4(p, 1.0);
+  if (clip.w <= 0.0) return 0.0;
+  vec2 ndc = clip.xy / clip.w;
+  if (abs(ndc.x) > 1.0 || abs(ndc.y) > 1.0) return 0.0;
+  float tile = uSlotTile[i];
+  vec2 cell = vec2(mod(tile, uAtlasCols), floor(tile / uAtlasCols));
+  float v = sightDepth(cell, ndc, clip.w);
+  return uSoftEdges < 0.5 ? v : v * smoothstep(uCosHalf, uCosInner, c);
 }
 
 // Slots arrive newest first. Returns 0 (fully present) .. 1 (gone).
+// Timing (how long ago it was seen, for how long) uses "more than half visible";
+// the soft visibility then shapes how present each point is, so edges fade.
 float pixelDissolve(vec3 p) {
   float lastSeen = -1.0;
   float streakStart = -1.0;
   bool streak = true;
+  float best = 0.0; // strongest (visibility x freshness) over the snapshots
   for (int i = 0; i < SIGHT_SLOTS; i++) {
     if (uSlotValid[i] < 0.5) continue;
-    if (sightLit(i, p)) {
+    float v = sightLit(i, p);
+    // Eased: lingers at first, then drains away (gentler than a straight line).
+    best = max(best, v * (1.0 - smoothstep(0.0, uVanish, uSlotAge[i])));
+    if (v > 0.5) {
       if (lastSeen < 0.0) lastSeen = uSlotAge[i];
       if (streak) streakStart = uSlotAge[i];
     } else if (lastSeen >= 0.0) {
       streak = false;
     }
   }
-  if (lastSeen < 0.0) return 1.0;
+  if (best <= 0.0) return 1.0;
   // Credit one interval so a fresh glimpse shows at once ("quick splash").
-  float appear = clamp((streakStart - lastSeen + uSightInterval) / uAppear, 0.0, 1.0);
-  // Eased: lingers at first, then drains away (gentler than a straight line).
-  float fade = smoothstep(0.0, uVanish, lastSeen);
-  return 1.0 - appear * (1.0 - fade);
+  float appear = lastSeen < 0.0 ? 1.0 : clamp((streakStart - lastSeen + uSightInterval) / uAppear, 0.0, 1.0);
+  return 1.0 - appear * best;
 }
 `;
 

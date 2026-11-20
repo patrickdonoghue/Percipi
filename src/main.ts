@@ -8,6 +8,7 @@ import { SmellField } from './perception/smell';
 import { SoundField } from './perception/sound';
 import { PovMode } from './pov';
 import { DissolveRenderer } from './render/dissolve';
+import { pixelSightUniforms } from './perception/pixelSight';
 import { Recorder } from './replay/recorder';
 import { ReplayMode } from './replay/replayMode';
 import { createEndButton } from './replay/ui';
@@ -116,7 +117,7 @@ const wake = setupWake(
 
 // Dev-only handle for testing from the browser console.
 if (import.meta.env.DEV) {
-  Object.assign(window, { percipi: { pov, eyes, world, engine, smellField, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay } });
+  Object.assign(window, { percipi: { pov, eyes, world, engine, smellField, recorder, director, audio, renderer, scene, endWalk, getReplay: () => replay, pixelSightUniforms } });
 }
 
 window.addEventListener('resize', () => {

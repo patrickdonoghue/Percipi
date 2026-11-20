@@ -151,6 +151,8 @@ export const TUNING = {
     near: 0.1, // metres
     biasMetres: 0.04, // tolerance so surfaces don't hide themselves
     biasSlope: 0.004, // extra tolerance per metre of distance
+    softEdges: true, // feather the edge of his view cone in the replay (false = hard edge)
+    coneFeatherDeg: 12, // the edge of his view cone fades over this many degrees
   },
 
   sound: {
