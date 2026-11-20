@@ -280,6 +280,11 @@ export const TUNING = {
     speckle: 0.08, // grain in the concrete surface
   },
 
+  dog: {
+    height: 0.48, // metres
+    yawDeg: 45, // which way he faces (0 = towards the house's front, 90 = east); 45 = half towards the patio door
+  },
+
   caller: {
     height: 1.78, // metres: same as the replay figure (character.height)
     // His clothes are repainted so he isn't mistaken for the main figure:

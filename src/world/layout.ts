@@ -151,6 +151,6 @@ export const FURNITURE: BoxSpec[] = [
   ...tree('yard_tree_ne3', 1664, 503, 'round', 3.2),
   ...chunkedBoxPx('yard_hedge_west', 'furniture', 245, 543, 315, 1503, HEDGE_HEIGHT, HEDGE_PIECE),
   ...chunkedBoxPx('yard_hedge_east', 'furniture', 1631, 617, 1699, 1580, HEDGE_HEIGHT, HEDGE_PIECE),
-  prop('yard_dog', 680, 310, 752, 345, 0.6),
+  prop('yard_dog', 683, 295, 749, 361, 0.6), // square, so the dog fits when turned
   prop('yard_caller', 1542, 422, 1578, 458, TUNING.caller.height), // backyard north-east corner, by the trees
 ];
