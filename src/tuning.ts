@@ -218,6 +218,22 @@ export const TUNING = {
     },
   },
 
+  // Yard surfaces (see decor.ts)
+  hedge: {
+    color: 0x4a7c34,
+    step: 0.22, // metres between the bumps' vertices
+    rounding: 0.3, // metres: how much the top edges and ends are rounded off
+    bump: 0.08, // metres: how far leaves poke in and out
+    bumpScale: 2.4, // bumps per metre
+    shade: 0.35, // light/dark variation between leaf clumps (0..1)
+    darkerAtBase: 0.35, // the bottom is this much darker than the top
+  },
+  sidewalk: {
+    grooveWidth: 0.03, // metres: the dark joint between concrete squares
+    grooveShade: 0.55, // joint brightness (1 = no joint)
+    speckle: 0.08, // grain in the concrete surface
+  },
+
   caller: {
     height: 2.05, // metres: about the height of a door, so he reads clearly from the house
     // His clothes are repainted so he isn't mistaken for the main figure:
