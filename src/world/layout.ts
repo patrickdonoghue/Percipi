@@ -63,7 +63,7 @@ export const FLOORS: FloorDef[] = [
 
 export const WALLS: WallDef[] = [
   // Outer walls
-  { ...wallPx('wall_north', [504, 589], [1376, 589], [['window', 557, 650], ['door', 745, 880], ['window', 1113, 1250]]), outward: '-z' },
+  { ...wallPx('wall_north', [504, 589], [1376, 589], [['window', 557, 650], ['door', 745, 835], ['sidelight', 835, 880], ['window', 1113, 1250]]), outward: '-z' },
   { ...wallPx('wall_south', [504, 1350], [1376, 1350], [['window', 590, 722], ['door', 800, 880], ['window', 1113, 1250]]), outward: '+z' },
   { ...wallPx('wall_west', [504, 589], [504, 1350], [['window', 940, 1075]]), outward: '-x' },
   { ...wallPx('wall_east', [1376, 589], [1376, 1350], [['window', 940, 1000]]), outward: '+x' },
@@ -85,7 +85,7 @@ export const WALLS: WallDef[] = [
 export const DOORS: DoorDef[] = [
   // ('-z' = up the plan, towards the backyard)
   doorPx('door_front', [880, 1350], '-x', 80, -1), // opens into the living area
-  doorPx('door_patio', [745, 589], '+x', 135, 1), // out to the patio (slider in the plan)
+  doorPx('door_patio', [745, 589], '+x', 90, 1), // out to the patio; a fixed glass panel fills the rest of the opening
   doorPx('door_bed2', [990, 893], '+x', 90, 1), // into bedroom #2
   doorPx('door_bed1', [990, 1043], '+x', 90, -1), // into bedroom #1
   doorPx('door_bath', [1088, 1035], '-z', 90, -1), // into the bath

@@ -10,7 +10,7 @@ import type { BoxSpec, Vec3 } from './build';
 import type { Kind } from '../perception/tags';
 import type { Direction, DoorDef } from './door';
 import type { Rect } from './layout';
-import { doorway, windowGap, type Gap, type WallDef } from './walls';
+import { doorway, sidelight, windowGap, type Gap, type WallDef } from './walls';
 
 const FT = 0.3048;
 export const PX_PER_M = 886 / (32 * FT);
@@ -53,7 +53,8 @@ export function chunkedBoxPx(id: string, kind: Kind, x1: number, y1: number, x2:
 }
 
 // Openings along a wall, given as plan pixel coordinates along the wall's axis.
-export type GapPx = ['door' | 'window', number, number];
+// 'sidelight' = a full-height fixed glass panel beside a door.
+export type GapPx = ['door' | 'window' | 'sidelight', number, number];
 
 export function wallPx(id: string, a: [number, number], b: [number, number], gaps: GapPx[] = [], height?: number): WallDef {
   const horizontal = a[1] === b[1];
@@ -61,7 +62,7 @@ export function wallPx(id: string, a: [number, number], b: [number, number], gap
   const toGap = ([type, p1, p2]: GapPx): Gap => {
     const o1 = Math.abs(p1 - start) / PX_PER_M;
     const o2 = Math.abs(p2 - start) / PX_PER_M;
-    const make = type === 'door' ? doorway : windowGap;
+    const make = type === 'door' ? doorway : type === 'sidelight' ? sidelight : windowGap;
     return make(Math.min(o1, o2), Math.max(o1, o2));
   };
   const def: WallDef = { id, a: [mx(a[0]), mz(a[1])], b: [mx(b[0]), mz(b[1])], gaps: gaps.map(toGap) };

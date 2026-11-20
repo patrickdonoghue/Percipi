@@ -30,6 +30,7 @@ export const windowGap = (from: number, to: number): Gap => ({
   top: TUNING.house.windowHead,
   glass: true,
 });
+export const sidelight = (from: number, to: number): Gap => ({ from, to, bottom: 0, top: TUNING.house.doorHeight, glass: true });
 
 // Turn one wall line into box pieces: solid runs (split into short segments)
 // plus the bits below windows and above doors/windows.
