@@ -1,0 +1,11 @@
+Model Information:
+* title:	frying pan with fried eggs
+* source:	https://sketchfab.com/3d-models/frying-pan-with-fried-eggs-76ee6a337cea44eb8891bc598fe78db6
+* author:	FlipBard (https://sketchfab.com/flipbard)
+
+Model License:
+* license type:	CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions must have the same license.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "frying pan with fried eggs" (https://sketchfab.com/3d-models/frying-pan-with-fried-eggs-76ee6a337cea44eb8891bc598fe78db6) by FlipBard (https://sketchfab.com/flipbard) licensed under CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)

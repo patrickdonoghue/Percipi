@@ -1,0 +1,11 @@
+Model Information:
+* title:	Privacy Fence
+* source:	https://sketchfab.com/3d-models/privacy-fence-f42b8bab40f74c0e9b6692bd7602c51a
+* author:	Tiko (https://sketchfab.com/tikoavp)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Privacy Fence" (https://sketchfab.com/3d-models/privacy-fence-f42b8bab40f74c0e9b6692bd7602c51a) by Tiko (https://sketchfab.com/tikoavp) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

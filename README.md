@@ -45,7 +45,7 @@ Every adjustable number (dissolve speed, view cone, walk speed, colours…) is i
 ## Models and credits
 
 Furniture, doors and kitchen come from the Kenney kit in `public/models` (CC0).
-The man and the dog are CC-BY Sketchfab models; the credits are in `CREDITS.md`
-and on the start screen. Their originals live in `assets-src/models/`; to rebuild
+The man, dog, trees, fence and egg pan are Sketchfab models (CC BY, and CC BY-NC-SA for the pan); the credits are in `CREDITS.md`
+and on the start screen. The man and dog originals live in `assets-src/models/`; to rebuild
 the small web versions (`man.glb`, `dog.glb`), install `@gltf-transform/cli` in any
 folder and run `node scripts/optimize-models.mjs <that folder>`.

@@ -5,7 +5,8 @@
 
 import type { BoxSpec } from './build';
 import type { DoorDef } from './door';
-import { boxPx, chunkedBoxPx, doorPx, mx, mz, rectPx, wallPx } from './plan';
+import { boxPx, chunkedBoxPx, doorPx, mx, mz, PX_PER_M, rectPx, wallPx } from './plan';
+import { TREE_SHAPES, type TreeShapeName } from './modelSpecs';
 import type { WallDef } from './walls';
 import { TUNING } from '../tuning';
 
@@ -96,11 +97,15 @@ const f = (id: string, x1: number, y1: number, x2: number, y2: number, h: number
 const prop = (id: string, x1: number, y1: number, x2: number, y2: number, h: number, y0 = 0): BoxSpec =>
   boxPx(id, 'prop', x1, y1, x2, y2, y0, h);
 
-// A tree: trunk box plus a canopy box, centred on a plan circle.
-function tree(id: string, cx: number, cy: number, r: number): BoxSpec[] {
-  const t = 8; // trunk half-width in plan pixels
-  const c = r * 0.85;
-  return [f(`${id}_trunk`, cx - t, cy - t, cx + t, cy + t, 2.6), f(`${id}_canopy`, cx - c, cy - c, cx + c, cy + c, 4.6, 2.0)];
+// A tree: trunk box plus a canopy box, centred on a plan point, sized to its model.
+export const TREES: { id: string; shape: TreeShapeName; height: number }[] = [];
+function tree(id: string, cx: number, cy: number, shape: TreeShapeName, height: number): BoxSpec[] {
+  TREES.push({ id, shape, height });
+  const sh = TREE_SHAPES[shape];
+  const t = (sh.trunk * height * PX_PER_M) / 2; // half-widths in plan pixels
+  const c = (sh.width * height * PX_PER_M * 0.85) / 2; // canopy box just inside the leaves
+  const leaves = sh.leavesFrom * height;
+  return [f(`${id}_trunk`, cx - t, cy - t, cx + t, cy + t, leaves + 0.3), f(`${id}_canopy`, cx - c, cy - c, cx + c, cy + c, height, leaves)];
 }
 
 export const FURNITURE: BoxSpec[] = [
@@ -111,7 +116,7 @@ export const FURNITURE: BoxSpec[] = [
   f('kitchen_stool_0', 740, 748, 762, 778, 0.65),
   f('kitchen_stool_1', 740, 808, 762, 838, 0.65),
   f('kitchen_stool_2', 740, 862, 762, 892, 0.65),
-  prop('kitchen_bacon', 525, 700, 560, 760, 0.98, 0.9),
+  prop('kitchen_bacon', 525, 700, 560, 760, 1.0, 0.9), // the egg pan (sized to keep its shape)
   // Living area
   f('living_sofa_back', 547, 1120, 615, 1300, 0.8),
   f('living_sofa_return', 547, 1055, 697, 1120, 0.8),
@@ -129,10 +134,10 @@ export const FURNITURE: BoxSpec[] = [
   f('porch_post_w', 558, 1508, 575, 1524, 2.4),
   f('porch_post_e', 895, 1508, 912, 1524, 2.4),
   // Yard
-  ...tree('yard_tree_big', 347, 362, 93),
-  ...tree('yard_tree_ne1', 1492, 320, 55),
-  ...tree('yard_tree_ne2', 1652, 345, 72),
-  ...tree('yard_tree_ne3', 1664, 503, 55),
+  ...tree('yard_tree_big', 347, 362, 'round', 4.0),
+  ...tree('yard_tree_ne1', 1492, 320, 'tallPine', 4.0),
+  ...tree('yard_tree_ne2', 1652, 345, 'tallPine', 3.8),
+  ...tree('yard_tree_ne3', 1664, 503, 'round', 3.2),
   ...chunkedBoxPx('yard_hedge_west', 'furniture', 245, 543, 315, 1503, HEDGE_HEIGHT, HEDGE_PIECE),
   ...chunkedBoxPx('yard_hedge_east', 'furniture', 1631, 617, 1699, 1580, HEDGE_HEIGHT, HEDGE_PIECE),
   prop('yard_dog', 680, 310, 752, 345, 0.6),
