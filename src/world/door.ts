@@ -3,6 +3,7 @@ import { DEG, TUNING } from '../tuning';
 import type { Interactable } from '../input/interactPrompt';
 import type { Perceivable } from '../perception/tags';
 import type { Segment } from '../player';
+import type { Rect } from './layout';
 import { colorFor, makeBoxMesh, makePerceivable } from './build';
 
 export type Direction = '+x' | '-x' | '+z' | '-z';
@@ -30,8 +31,13 @@ export class Door implements Interactable {
   private openness: number = TUNING.door.startOpenFraction;
   private target: number = TUNING.door.startOpenFraction;
   private readonly closedYaw: number;
+  private readonly maxOpenDeg: number;
 
-  constructor(private readonly def: DoorDef) {
+  // `walls` are the walking blockers: the door stops opening just before it would touch one.
+  constructor(
+    private readonly def: DoorDef,
+    walls: readonly Rect[] = [],
+  ) {
     const { doorHeight } = TUNING.house;
     const { thickness } = TUNING.door;
     const height = doorHeight - 0.02;
@@ -42,6 +48,7 @@ export class Door implements Interactable {
     this.pivot.position.set(def.hinge[0], 0, def.hinge[1]);
     // Local +x is the door's length; rotate so it points along `along` when closed.
     this.closedYaw = DIR[def.along].yaw;
+    this.maxOpenDeg = this.openLimit(walls);
     this.item = makePerceivable(def.id, 'door', mesh, true);
     this.applyRotation();
   }
@@ -87,8 +94,39 @@ export class Door implements Interactable {
     this.applyRotation();
   }
 
+  private angleAt(deg: number): number {
+    return this.closedYaw + this.def.swingSign * deg * DEG;
+  }
+
+  // How far it can swing (up to openAngleDeg) before the leaf meets a wall, like a door stop.
+  // Walls it already touches when shut (its own frame) don't count.
+  private openLimit(walls: readonly Rect[]): number {
+    const { openAngleDeg } = TUNING.door;
+    const frame = new Set(walls.filter((w) => this.leafTouches(w, 0)));
+    const others = walls.filter((w) => !frame.has(w));
+    for (let deg = 1; deg <= openAngleDeg; deg++) {
+      if (others.some((w) => this.leafTouches(w, deg))) return deg - 1;
+    }
+    return openAngleDeg;
+  }
+
+  private leafTouches(w: Rect, deg: number): boolean {
+    const { thickness, stopGap, hingeSkip } = TUNING.door;
+    const pad = thickness / 2 + stopGap;
+    const yaw = this.angleAt(deg);
+    const dx = Math.cos(yaw);
+    const dz = -Math.sin(yaw);
+    const [hx, hz] = this.def.hinge;
+    for (let t = hingeSkip; t <= this.def.width + 1e-6; t += 0.05) {
+      const x = hx + dx * t;
+      const z = hz + dz * t;
+      if (x > w.minX - pad && x < w.maxX + pad && z > w.minZ - pad && z < w.maxZ + pad) return true;
+    }
+    return false;
+  }
+
   private applyRotation(): void {
-    const yaw = this.closedYaw + this.def.swingSign * this.openness * TUNING.door.openAngleDeg * DEG;
+    const yaw = this.angleAt(this.openness * this.maxOpenDeg);
     this.pivot.rotation.y = yaw;
     // Local +x (the leaf) turned by `yaw` about the up axis.
     const s = this.segment;

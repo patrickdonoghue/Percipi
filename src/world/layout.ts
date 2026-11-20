@@ -74,9 +74,9 @@ export const WALLS: WallDef[] = [
   wallPx('wall_closets_north_e', [990, 589], [990, 893]),
   wallPx('wall_closets_south_e', [990, 1043], [990, 1350]),
   // Hall: bedroom #2 + bath on the north side, bedroom #1 on the south side
-  wallPx('wall_hall_north', [897, 893], [1376, 893], [['door', 990, 1080]]),
-  wallPx('wall_hall_south', [897, 1043], [1376, 1043], [['door', 990, 1080]]),
-  wallPx('wall_bath_west', [1088, 893], [1088, 1043], [['door', 945, 1035]]),
+  wallPx('wall_hall_north', [897, 893], [1376, 893], [['door', 997, 1080]]),
+  wallPx('wall_hall_south', [897, 1043], [1376, 1043], [['door', 997, 1080]]),
+  wallPx('wall_bath_west', [1088, 893], [1088, 1043], [['door', 962, 1035]]), // a narrower door, so it swings clear of the vanity
   // Yard fence (open to the sidewalk at the front)
   { ...wallPx('fence_west', [203, 230], [203, 1615], [], FENCE_HEIGHT), color: C.fence },
   { ...wallPx('fence_north', [203, 230], [1740, 230], [], FENCE_HEIGHT), color: C.fence },
@@ -87,9 +87,9 @@ export const DOORS: DoorDef[] = [
   // ('-z' = up the plan, towards the backyard)
   doorPx('door_front', [880, 1350], '-x', 80, -1), // opens into the living area
   doorPx('door_patio', [745, 589], '+x', 90, 1), // out to the patio; a fixed glass panel fills the rest of the opening
-  doorPx('door_bed2', [990, 893], '+x', 90, 1), // into bedroom #2
-  doorPx('door_bed1', [990, 1043], '+x', 90, -1), // into bedroom #1
-  doorPx('door_bath', [1088, 1035], '-z', 90, -1), // into the bath
+  doorPx('door_bed2', [997, 893], '+x', 83, 1), // into bedroom #2 (hinge at the closet wall's face, not its middle)
+  doorPx('door_bed1', [997, 1043], '+x', 83, -1), // into bedroom #1
+  doorPx('door_bath', [1088, 1035], '-z', 73, -1), // into the bath
 ];
 
 const f = (id: string, x1: number, y1: number, x2: number, y2: number, h: number, y0 = 0): BoxSpec =>

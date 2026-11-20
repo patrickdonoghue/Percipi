@@ -58,7 +58,7 @@ export function buildGreybox(): GreyboxWorld {
   for (const w of WALLS) for (const piece of buildWall(w)) add(piece);
   for (const spec of FURNITURE) add(spec);
 
-  const doors = DOORS.map((d) => new Door(d));
+  const doors = DOORS.map((d) => new Door(d, colliders));
   for (const d of doors) {
     root.add(d.pivot);
     items.push(d.item);

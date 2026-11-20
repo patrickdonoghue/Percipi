@@ -59,7 +59,9 @@ export const TUNING = {
   },
 
   door: {
-    openAngleDeg: 100,
+    openAngleDeg: 100, // the most a door opens; less if a wall is in the way
+    stopGap: 0.02, // metres: an open door stops this far short of a wall
+    hingeSkip: 0.15, // metres from the hinge not checked against walls (the frame touches there)
     swingSeconds: 0.6,
     thickness: 0.05,
     interactDistance: 1.8, // metres: how close you must be to open/close a door
