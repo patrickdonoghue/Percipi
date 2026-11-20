@@ -14,6 +14,7 @@ import { ReplayMode } from './replay/replayMode';
 import { createEndButton } from './replay/ui';
 import { Eyes } from './eyes';
 import { Hints } from './hints';
+import { showIntro } from './intro';
 import { setupWake } from './wake';
 import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
@@ -80,19 +81,22 @@ const setDaylight = (level: number) => {
 };
 let replay: ReplayMode | null = null;
 
-// wake -> pov (walk, recording) -> replay (zoom-out reveal, then playback)
-let mode: 'wake' | 'pov' | 'replay' = 'wake';
+// wake -> pov (walk, recording) -> intro (Berkeley, over the frozen last view) -> replay (zoom-out reveal, then playback)
+let mode: 'wake' | 'pov' | 'intro' | 'replay' = 'wake';
 
 const endWalk = () => {
   if (mode !== 'pov' || recorder.frames.length === 0) return;
-  mode = 'replay';
+  mode = 'intro';
   wake.disable();
   endButton.hide();
   pov.inputEnabled = false;
   hints.setStage(null); // the replay hint comes once playback starts
   director.stopAll();
   if (document.pointerLockElement) document.exitPointerLock();
-  replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, recorder.events, recorder.plume, audio, world, dissolve);
+  showIntro(() => {
+    mode = 'replay';
+    replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, recorder.events, recorder.plume, audio, world, dissolve);
+  });
 };
 
 const endButton = createEndButton(endWalk);

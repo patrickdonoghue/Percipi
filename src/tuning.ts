@@ -130,6 +130,12 @@ export const TUNING = {
     ignoreTapSeconds: 0.35, // the wake-up tap itself doesn't also open the eyes
   },
 
+  intro: {
+    fadeSeconds: 0.7, // panels of the Berkeley explanation fade this fast
+    ignoreInputSeconds: 0.6, // a tap this soon after a panel appears is ignored (no accidental skipping)
+    dim: 0.82, // how dark the overlay is over the last view of the walk (0..1)
+  },
+
   hints: {
     delaySeconds: 1.0, // pause before a hint appears (after the eyes open / the replay starts)
     minSeconds: 4, // a hint stays at least this long, even once you've done it
