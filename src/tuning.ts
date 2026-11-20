@@ -90,6 +90,7 @@ export const TUNING = {
       wallInside: 0xece6da, // warm off-white paint
       wallOutside: 0x9fb0bd, // blue-grey siding, so the house reads clearly from above
       fence: 0x9b7653,
+      porchTrim: 0xe6e1d8, // porch posts and roof
     },
     window: {
       frameColor: 0xf4f1ea,
@@ -219,6 +220,12 @@ export const TUNING = {
   },
 
   // Yard surfaces (see decor.ts)
+  porch: {
+    postHeight: 2.4, // metres; the roof sits on top
+    roofThickness: 0.15,
+    roofOverhangPx: 18, // plan pixels the roof reaches past the posts
+  },
+
   hedge: {
     color: 0x4a7c34,
     step: 0.22, // metres between the bumps' vertices

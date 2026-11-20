@@ -108,6 +108,18 @@ function tree(id: string, cx: number, cy: number, shape: TreeShapeName, height: 
   return [f(`${id}_trunk`, cx - t, cy - t, cx + t, cy + t, leaves + 0.3), f(`${id}_canopy`, cx - c, cy - c, cx + c, cy + c, height, leaves)];
 }
 
+// Front porch: two posts holding a flat roof that meets the house wall.
+// The roof is a 'wall' piece so the replay's dollhouse cut removes it with the walls.
+function porch(): BoxSpec[] {
+  const { postHeight: h, roofThickness, roofOverhangPx: o } = TUNING.porch;
+  const trim = (b: BoxSpec): BoxSpec => ({ ...b, color: C.porchTrim });
+  return [
+    trim(f('porch_post_w', 558, 1508, 575, 1524, h)),
+    trim(f('porch_post_e', 895, 1508, 912, 1524, h)),
+    trim(boxPx('porch_roof', 'wall', 558 - o, 1357, 912 + o, 1524 + o, h, h + roofThickness)),
+  ];
+}
+
 export const FURNITURE: BoxSpec[] = [
   // Kitchen
   f('kitchen_counter_west', 511, 597, 570, 925, 0.9),
@@ -131,8 +143,7 @@ export const FURNITURE: BoxSpec[] = [
   f('bath_toilet', 1225, 905, 1265, 970, 0.75),
   f('bath_tub', 1300, 905, 1365, 1030, 0.55),
   // Porch posts
-  f('porch_post_w', 558, 1508, 575, 1524, 2.4),
-  f('porch_post_e', 895, 1508, 912, 1524, 2.4),
+  ...porch(),
   // Yard
   ...tree('yard_tree_big', 347, 362, 'round', 4.0),
   ...tree('yard_tree_ne1', 1492, 320, 'tallPine', 4.0),
