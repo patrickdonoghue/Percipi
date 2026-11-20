@@ -12,16 +12,29 @@ const FACES = ['+x', '-x', '+y', '-y', '+z', '-z'] as const;
 const paintCache = new Map<string, BufferGeometry>();
 
 // A unit box with its own colour on each face (a wall painted differently on
-// each side). Shared between pieces with the same paint.
-export function paintedBoxGeometry(paint: FacePaint): BufferGeometry {
-  const key = FACES.map((f) => paint[f]).join(',');
+// each side), with shading baked in so walls don't melt into one flat colour:
+// each direction gets its own brightness (as if lit from one side), and the
+// walls darken slightly towards the floor. It costs nothing to draw: the
+// colours ride on the vertices the box has anyway. y0/y1 are the piece's
+// bottom and top in metres, so the floor shading lines up across pieces.
+// Shared between pieces with the same paint and height.
+export function paintedBoxGeometry(paint: FacePaint, y0: number, y1: number): BufferGeometry {
+  const key = `${FACES.map((f) => paint[f]).join(',')}|${y0.toFixed(3)}|${y1.toFixed(3)}`;
   let g = paintCache.get(key);
   if (!g) {
+    const { faceShade, floorShade } = TUNING.render.wallShading;
+    const H = TUNING.house.wallHeight;
     g = new BoxGeometry(1, 1, 1);
+    const pos = g.getAttribute('position') as BufferAttribute;
     const colors = new Float32Array(24 * 3);
     const c = new Color();
     for (let v = 0; v < 24; v++) {
-      c.set(paint[FACES[Math.floor(v / 4)]!]);
+      const face = FACES[Math.floor(v / 4)]!;
+      const y = pos.getY(v) < 0 ? y0 : y1; // this vertex's height in metres
+      const up = Math.min(1, Math.max(0, y / H));
+      const side = face !== '+y' && face !== '-y';
+      const k = faceShade[face] * (side ? floorShade + (1 - floorShade) * up : 1);
+      c.set(paint[face]).multiplyScalar(k);
       colors.set([c.r, c.g, c.b], v * 3);
     }
     g.setAttribute('color', new BufferAttribute(colors, 3));

@@ -104,6 +104,12 @@ export const TUNING = {
       bed2_floor: 0xbde29a, // sage green
       bath_floor: 0x94e0d0, // seafoam
     },
+    // Shading baked into the wall colours (free to draw), so walls facing
+    // different ways never blend into one flat shape.
+    wallShading: {
+      faceShade: { '+x': 1.0, '-x': 0.84, '+z': 0.93, '-z': 0.77, '+y': 1.0, '-y': 1.0 }, // by the way a face points
+      floorShade: 0.8, // brightness at the floor, rising to 1 at the top of the wall
+    },
     sunColor: 0xfff0d6, // warm morning sun
     ambientColor: 0xfff8ee, // sky light from above, fills the shadows (a hemisphere light)
     groundColor: 0xd8b48c, // warm light bounced up from floors and grass

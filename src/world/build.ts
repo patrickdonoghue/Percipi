@@ -69,7 +69,7 @@ function geometryFor(spec: BoxSpec): BufferGeometry {
     const alongX = x1 - x0 >= z1 - z0;
     return windowGeometry(alongX ? x1 - x0 : z1 - z0, y1 - y0, alongX);
   }
-  if (spec.paint) return paintedBoxGeometry(spec.paint);
+  if (spec.paint) return paintedBoxGeometry(spec.paint, spec.min[1], spec.max[1]);
   return unitBox;
 }
 
