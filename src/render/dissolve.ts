@@ -44,7 +44,8 @@ float dNoise(vec3 x) {
     f.z);
 }
 float dFbm(vec3 p) {
-  return 0.5 * dNoise(p) + 0.3 * dNoise(p * 2.03) + 0.2 * dNoise(p * 4.01);
+  // Mostly the big, slow shape; a little fine detail so edges aren't blobby.
+  return 0.65 * dNoise(p) + 0.25 * dNoise(p * 2.03) + 0.1 * dNoise(p * 4.01);
 }
 `;
 

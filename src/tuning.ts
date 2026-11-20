@@ -3,10 +3,10 @@
 
 export const TUNING = {
   dissolve: {
-    appearSeconds: 0.3, // "quick splash"
-    vanishSeconds: 0.7, // "slow fade"
-    noiseScale: 2.5, // size of the dissolve pattern (higher = finer grain)
-    edgeWidth: 0.12, // width of the glowing edge, in noise units (wider = softer)
+    appearSeconds: 0.45, // "quick splash" (a little softer than the PRD's 0.3, to calm the replay)
+    vanishSeconds: 1.8, // "slow fade" (longer than the PRD's 0.7: things linger like a fading memory instead of strobing)
+    noiseScale: 1.1, // size of the dissolve pattern (higher = finer grain; lower = bigger, calmer patches)
+    edgeWidth: 0.16, // width of the glowing edge, in noise units (wider = softer)
     edgeIntensity: 0.45, // brightness of the edge glow (higher blows out to white)
     edgeSoftness: 2.0, // how quickly the glow fades into the surface (higher = gentler)
     edgeColor: [1.0, 0.86, 0.68] as const, // warm glow at the dissolve edge
@@ -145,8 +145,8 @@ export const TUNING = {
   // A pixel exists only if it was in his line of sight recently.
   pixelSight: {
     enabled: true, // false = fall back to per-object sight in the replay
-    slots: 8, // recent snapshots kept; slots x interval should cover vanishSeconds
-    intervalSeconds: 0.1, // time between kept snapshots
+    slots: 10, // recent snapshots kept; slots x interval should cover vanishSeconds
+    intervalSeconds: 0.2, // time between kept snapshots
     tileSize: 512, // snapshot resolution (pixels per side)
     near: 0.1, // metres
     biasMetres: 0.04, // tolerance so surfaces don't hide themselves

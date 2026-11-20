@@ -112,7 +112,8 @@ float pixelDissolve(vec3 p) {
   if (lastSeen < 0.0) return 1.0;
   // Credit one interval so a fresh glimpse shows at once ("quick splash").
   float appear = clamp((streakStart - lastSeen + uSightInterval) / uAppear, 0.0, 1.0);
-  float fade = clamp(lastSeen / uVanish, 0.0, 1.0);
+  // Eased: lingers at first, then drains away (gentler than a straight line).
+  float fade = smoothstep(0.0, uVanish, lastSeen);
   return 1.0 - appear * (1.0 - fade);
 }
 `;
