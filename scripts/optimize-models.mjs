@@ -17,7 +17,7 @@ const cli = path.join(path.resolve(toolDir), 'node_modules/.bin/gltf-transform')
 
 const MODELS = [
   { src: 'assets-src/models/bearded_man_-_low_poly_animated/scene.gltf', out: 'public/models/man.glb', keep: ['walk', 'idle'], texture: 512 },
-  { src: 'assets-src/models/stylized_low_poly_german_shepherd/scene.gltf', out: 'public/models/dog.glb', keep: ['Idle1', 'IdleEarTwitch', 'WalkCycle'] },
+  { src: 'assets-src/models/stylized_low_poly_german_shepherd/scene.gltf', out: 'public/models/dog.glb', keep: ['Idle1', 'IdleEarTwitch', 'WalkCycle', 'SitDown', 'IdleSit', 'SitScratchEar', 'StandUp'] },
 ];
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);

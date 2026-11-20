@@ -283,6 +283,14 @@ export const TUNING = {
   dog: {
     height: 0.48, // metres
     yawDeg: 45, // which way he faces (0 = towards the house's front, 90 = east); 45 = half towards the patio door
+    // His idle routine: stands (with ear twitches), sits down, sits (scratching now and then), stands up, repeat.
+    // Each pair is [shortest, longest] seconds; the actual time is picked at random in between.
+    routine: true, // false = he just stands and idles
+    standSeconds: [12, 25] as [number, number],
+    sitSeconds: [10, 20] as [number, number],
+    twitchEverySeconds: [4, 9] as [number, number],
+    scratchEverySeconds: [5, 10] as [number, number],
+    blendSeconds: 0.3, // cross-fade between animations
   },
 
   caller: {

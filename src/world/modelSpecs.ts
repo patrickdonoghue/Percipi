@@ -1,6 +1,7 @@
 import { TUNING } from '../tuning';
 import type { Perceivable } from '../perception/tags';
 import type { AnimatedProp } from './animated';
+import { dogRoutine } from './dogRoutine';
 import type { Direction } from './door';
 
 // Which model replaces which grey box (scene data, keyed by the ids in layout.ts).
@@ -84,7 +85,7 @@ export type TreeShapeName = keyof typeof TREE_SHAPES;
 
 // Animated models placed in an object's box (see animated.ts).
 export const ANIMATED_PROPS: Record<string, AnimatedProp> = {
-  yard_dog: { model: 'dog', clip: 'Idle1', yawDeg: TUNING.dog.yawDeg, height: TUNING.dog.height }, // turned towards the patio door
+  yard_dog: { model: 'dog', clip: 'Idle1', yawDeg: TUNING.dog.yawDeg, height: TUNING.dog.height, routine: dogRoutine }, // turned towards the patio door
   // Facing the house from the corner, in different clothes from the main figure.
   yard_caller: { model: 'man', clip: 'idle', yawDeg: -45, height: TUNING.caller.height, recolor: TUNING.caller.recolor, watchPlayer: true },
 };

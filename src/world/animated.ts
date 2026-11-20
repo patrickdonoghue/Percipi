@@ -18,6 +18,7 @@ interface Source {
 
 const sources = new Map<AnimatedName, Source>();
 const mixers: AnimationMixer[] = [];
+const tickers: ((dt: number) => void)[] = []; // routines that choose what a model plays next
 
 export async function preloadAnimated(names: AnimatedName[]): Promise<void> {
   const loader = new GLTFLoader();
@@ -63,6 +64,7 @@ export function instanceOf(name: AnimatedName): AnimatedInstance | null {
 
 // Advance every animation (the walk and the replay both call this each frame).
 export function updateAnimations(dt: number): void {
+  for (const t of tickers) t(dt);
   for (const m of mixers) m.update(dt);
 }
 
@@ -73,6 +75,7 @@ export interface AnimatedProp {
   height?: number; // metres; if set, scaled to this height (else fitted inside its box)
   recolor?: readonly RecolorRule[]; // repaint its texture (a second person in different clothes)
   watchPlayer?: boolean; // turns his head to follow the player (see headTrack.ts)
+  routine?: (inst: AnimatedInstance) => ((dt: number) => void) | null; // varies the animation over time (else just loops clip)
 }
 
 // Put an animated model inside a perceivable object's box. The box stays as the
@@ -107,8 +110,10 @@ export function attachAnimated(p: Perceivable, spec: AnimatedProp): boolean {
   p.mesh.add(holder);
   boxMat.visible = false; // the model is drawn instead of the box
 
+  const ticker = spec.routine?.(inst);
   const clip = inst.clip(spec.clip);
-  if (clip) inst.mixer.clipAction(clip).play();
+  if (ticker) tickers.push(ticker);
+  else if (clip) inst.mixer.clipAction(clip).play();
   if (spec.watchPlayer) addHeadTracker(inst.root);
   return true;
 }
