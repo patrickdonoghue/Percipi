@@ -235,7 +235,7 @@ export const TUNING = {
   },
 
   caller: {
-    height: 2.05, // metres: about the height of a door, so he reads clearly from the house
+    height: 1.78, // metres: same as the replay figure (character.height)
     // His clothes are repainted so he isn't mistaken for the main figure:
     // light blue shirt -> red, blue jeans -> brown.
     recolor: [
