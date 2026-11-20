@@ -20,6 +20,9 @@ export class PovMode {
   private interactables: Interactable[] = [];
   private enabled = true;
   private readonly forwardVec = new Vector3();
+  private get doorSegments() {
+    return this.world.doors.map((d) => d.segment);
+  }
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -67,8 +70,8 @@ export class PovMode {
   update(dt: number): void {
     this.desktop.update();
     const move = combineMoves(this.desktop.move, this.touch.move);
-    this.player.update(dt, this.head.yaw, move, this.world.colliders, this.world.bounds);
     for (const d of this.world.doors) d.update(dt);
+    this.player.update(dt, this.head.yaw, move, this.world.colliders, this.world.bounds, this.doorSegments);
     this.placeCamera();
     if (this.enabled) this.prompt.update(this.nearest()?.label ?? null);
   }

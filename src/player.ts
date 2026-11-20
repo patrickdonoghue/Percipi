@@ -2,6 +2,14 @@ import { TUNING } from './tuning';
 import type { MoveVector } from './input/head';
 import type { Rect } from './world/layout';
 
+// A thin moving blocker, e.g. a door leaf from its hinge to its free edge.
+export interface Segment {
+  ax: number;
+  az: number;
+  bx: number;
+  bz: number;
+}
+
 // The character's body: walks on the ground plane and slides along walls and furniture.
 export class Player {
   constructor(
@@ -9,7 +17,7 @@ export class Player {
     public z: number,
   ) {}
 
-  update(dt: number, yaw: number, move: MoveVector, colliders: readonly Rect[], bounds: Rect): void {
+  update(dt: number, yaw: number, move: MoveVector, colliders: readonly Rect[], bounds: Rect, segments: readonly Segment[] = []): void {
     const speed = TUNING.player.walkSpeed * dt;
     // Forward is -z when yaw = 0 (Three.js camera convention).
     const fx = -Math.sin(yaw);
@@ -22,9 +30,30 @@ export class Player {
     const r = TUNING.player.radius;
     for (let pass = 0; pass < 2; pass++) {
       for (const c of colliders) this.pushOut(c, r);
+      for (const sg of segments) this.pushOffSegment(sg, r + TUNING.door.thickness / 2);
     }
     this.x = Math.max(bounds.minX + r, Math.min(bounds.maxX - r, this.x));
     this.z = Math.max(bounds.minZ + r, Math.min(bounds.maxZ - r, this.z));
+  }
+
+  // Keep the body at least `r` from a segment (doors, which swing so can't be boxes).
+  private pushOffSegment(s: Segment, r: number): void {
+    const ex = s.bx - s.ax;
+    const ez = s.bz - s.az;
+    const len2 = ex * ex + ez * ez;
+    const t = len2 > 0 ? Math.max(0, Math.min(1, ((this.x - s.ax) * ex + (this.z - s.az) * ez) / len2)) : 0;
+    const dx = this.x - (s.ax + ex * t);
+    const dz = this.z - (s.az + ez * t);
+    const d = Math.hypot(dx, dz);
+    if (d >= r) return;
+    if (d > 1e-6) {
+      this.x += (dx / d) * (r - d);
+      this.z += (dz / d) * (r - d);
+    } else {
+      const n = Math.sqrt(len2) || 1; // exactly on the line: step off sideways
+      this.x += (-ez / n) * r;
+      this.z += (ex / n) * r;
+    }
   }
 
   private pushOut(c: Rect, r: number): void {

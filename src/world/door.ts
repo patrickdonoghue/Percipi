@@ -2,6 +2,7 @@ import { Group } from 'three';
 import { DEG, TUNING } from '../tuning';
 import type { Interactable } from '../input/interactPrompt';
 import type { Perceivable } from '../perception/tags';
+import type { Segment } from '../player';
 import { colorFor, makeBoxMesh, makePerceivable } from './build';
 
 export type Direction = '+x' | '-x' | '+z' | '-z';
@@ -53,6 +54,9 @@ export class Door implements Interactable {
     return Math.hypot(x - cx, z - cz);
   }
 
+  // The leaf as a line from hinge to free edge, where it is right now (it blocks walking).
+  readonly segment: Segment = { ax: 0, az: 0, bx: 0, bz: 0 };
+
   get openFraction(): number {
     return this.openness;
   }
@@ -84,6 +88,13 @@ export class Door implements Interactable {
   }
 
   private applyRotation(): void {
-    this.pivot.rotation.y = this.closedYaw + this.def.swingSign * this.openness * TUNING.door.openAngleDeg * DEG;
+    const yaw = this.closedYaw + this.def.swingSign * this.openness * TUNING.door.openAngleDeg * DEG;
+    this.pivot.rotation.y = yaw;
+    // Local +x (the leaf) turned by `yaw` about the up axis.
+    const s = this.segment;
+    s.ax = this.def.hinge[0];
+    s.az = this.def.hinge[1];
+    s.bx = s.ax + Math.cos(yaw) * this.def.width;
+    s.bz = s.az - Math.sin(yaw) * this.def.width;
   }
 }
