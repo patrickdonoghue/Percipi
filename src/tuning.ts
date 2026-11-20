@@ -221,6 +221,7 @@ export const TUNING = {
     figureAppearAt: 0.15, // fraction of the pull-out after which his figure is shown
     wallCutHeight: 1.1, // dollhouse: walls are shown this tall in the replay
     playbackSpeed: 1,
+    headSmoothSeconds: 0.25, // replay steadies his recorded head over this window (0 = off, raw recording)
     maxRecordSeconds: 1200, // walk ends automatically after this long (safety cap)
     minDistance: 6,
     maxDistance: 90,
