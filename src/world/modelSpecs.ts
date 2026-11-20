@@ -13,6 +13,7 @@ export interface ModelSpec {
   files: string[];
   face: Direction;
   node?: string; // use only this part of the model (e.g. the door leaf without its frame)
+  tint?: number; // multiplies the model's own colours (the red front door)
 }
 
 const CAB = 'kitchenCabinet';
@@ -41,7 +42,7 @@ export const MODEL_SPECS: Record<string, ModelSpec> = {
   bath_toilet: { files: ['toilet'], face: '+z' },
   bath_tub: { files: ['bathtub'], face: '-x' },
   // Doors: just the leaf from the kit's doorways. Outside doors have a glass panel.
-  door_front: { files: ['doorwayFront'], node: 'door', face: '+z' },
+  door_front: { files: ['doorwayFront'], node: 'door', face: '+z', tint: TUNING.render.colors.frontDoor },
   door_patio: { files: ['doorwayFront'], node: 'door', face: '+z' },
   door_bed2: { files: ['doorway'], node: 'door', face: '+z' },
   door_bed1: { files: ['doorway'], node: 'door', face: '+z' },

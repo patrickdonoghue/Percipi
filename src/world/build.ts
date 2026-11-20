@@ -3,7 +3,7 @@ import { TUNING } from '../tuning';
 import { createDissolveMaterial } from '../render/dissolve';
 import type { Kind, Perceivable, SenseTags } from '../perception/tags';
 import type { Direction } from './door';
-import { outerWallGeometry, windowGeometry } from './surfaces';
+import { paintedBoxGeometry, windowGeometry } from './surfaces';
 
 export type Vec3 = [number, number, number];
 
@@ -14,7 +14,10 @@ export interface BoxSpec {
   max: Vec3;
   color?: number; // overrides the colour for its kind (floors per room, the fence)
   outward?: Direction; // outer walls: this face is painted as outside siding
+  paint?: FacePaint; // a colour per face (walls: each side painted for its room; see paint.ts)
 }
+
+export type FacePaint = Record<Direction | '+y' | '-y', number>;
 
 // One shared 1x1x1 box; each mesh is scaled to size.
 const unitBox = new BoxGeometry(1, 1, 1);
@@ -66,7 +69,7 @@ function geometryFor(spec: BoxSpec): BufferGeometry {
     const alongX = x1 - x0 >= z1 - z0;
     return windowGeometry(alongX ? x1 - x0 : z1 - z0, y1 - y0, alongX);
   }
-  if (spec.outward) return outerWallGeometry(spec.outward);
+  if (spec.paint) return paintedBoxGeometry(spec.paint);
   return unitBox;
 }
 

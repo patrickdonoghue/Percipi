@@ -1,33 +1,32 @@
 import { BoxGeometry, BufferAttribute, BufferGeometry, Color, Matrix4, Vector3 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { TUNING } from '../tuning';
-import type { Direction } from './door';
+import type { FacePaint } from './build';
 
 // Geometry for house surfaces that need more than one colour in a single mesh
 // (one mesh = one draw call). All of them fill the unit cube, like the grey
 // boxes, so they are scaled and placed exactly the same way.
 
 // BoxGeometry face order: +x, -x, +y, -y, +z, -z (4 vertices each).
-const FACE_INDEX: Record<Direction, number> = { '+x': 0, '-x': 1, '+z': 4, '-z': 5 };
+const FACES = ['+x', '-x', '+y', '-y', '+z', '-z'] as const;
+const paintCache = new Map<string, BufferGeometry>();
 
-const wallCache = new Map<Direction, BufferGeometry>();
-
-// A wall box painted inside on every face except the outward one (siding).
-export function outerWallGeometry(outward: Direction): BufferGeometry {
-  let g = wallCache.get(outward);
+// A unit box with its own colour on each face (a wall painted differently on
+// each side). Shared between pieces with the same paint.
+export function paintedBoxGeometry(paint: FacePaint): BufferGeometry {
+  const key = FACES.map((f) => paint[f]).join(',');
+  let g = paintCache.get(key);
   if (!g) {
     g = new BoxGeometry(1, 1, 1);
-    const { wallInside, wallOutside } = TUNING.render.colors;
-    const inside = new Color(wallInside);
-    const outside = new Color(wallOutside);
     const colors = new Float32Array(24 * 3);
+    const c = new Color();
     for (let v = 0; v < 24; v++) {
-      const c = Math.floor(v / 4) === FACE_INDEX[outward] ? outside : inside;
+      c.set(paint[FACES[Math.floor(v / 4)]!]);
       colors.set([c.r, c.g, c.b], v * 3);
     }
     g.setAttribute('color', new BufferAttribute(colors, 3));
     g.computeBoundingBox();
-    wallCache.set(outward, g);
+    paintCache.set(key, g);
   }
   return g;
 }

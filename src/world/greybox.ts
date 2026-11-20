@@ -6,6 +6,7 @@ import { Door } from './door';
 import { BOUNDS, DOORS, FLOORS, FURNITURE, SPAWN, WALLS, type Rect } from './layout';
 import { applySenseTags } from './sounds';
 import { buildWall } from './walls';
+import { paintWall, roomEdges } from './paint';
 
 export interface GreyboxWorld {
   root: Group;
@@ -55,7 +56,13 @@ export function buildGreybox(): GreyboxWorld {
   };
 
   for (const fl of FLOORS) for (const t of floorTiles(fl.id, fl.rect, fl.color, fl.top)) add(t, fl.outdoor);
-  for (const w of WALLS) for (const piece of buildWall(w)) add(piece);
+  for (const w of WALLS) {
+    const alongX = w.a[1] === w.b[1];
+    for (const piece of buildWall(w, roomEdges(alongX ? 'x' : 'z'))) {
+      paintWall(piece);
+      add(piece);
+    }
+  }
   for (const spec of FURNITURE) add(spec);
 
   const doors = DOORS.map((d) => new Door(d, colliders));

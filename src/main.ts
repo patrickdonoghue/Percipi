@@ -1,5 +1,5 @@
 import './style.css';
-import { AmbientLight, Clock, Color, DirectionalLight, Scene, WebGLRenderer } from 'three';
+import { Clock, Color, DirectionalLight, HemisphereLight, Scene, WebGLRenderer } from 'three';
 import { TUNING } from './tuning';
 import { AudioOut } from './audio/audioOut';
 import { Hud } from './hud';
@@ -27,9 +27,9 @@ const canvas = renderer.domElement;
 document.getElementById('app')!.appendChild(canvas);
 
 const scene = new Scene();
-const ambient = new AmbientLight(0xffffff, TUNING.render.ambientIntensity);
+const ambient = new HemisphereLight(TUNING.render.ambientColor, TUNING.render.groundColor, TUNING.render.ambientIntensity);
 scene.add(ambient);
-const sun = new DirectionalLight(0xffffff, TUNING.render.sunIntensity);
+const sun = new DirectionalLight(TUNING.render.sunColor, TUNING.render.sunIntensity);
 sun.position.set(...TUNING.render.sunPosition);
 scene.add(sun);
 const fill = new DirectionalLight(0xffffff, TUNING.render.fillIntensity);

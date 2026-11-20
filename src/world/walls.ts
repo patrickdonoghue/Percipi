@@ -34,7 +34,10 @@ export const sidelight = (from: number, to: number): Gap => ({ from, to, bottom:
 
 // Turn one wall line into box pieces: solid runs (split into short segments)
 // plus the bits below windows and above doors/windows.
-export function buildWall(def: WallDef): BoxSpec[] {
+// `breaks` are positions (metres, on the wall's own axis: x for walls along x,
+// z for walls along z) where a new piece should start, e.g. where one room ends
+// and the next begins, so each piece can be painted for the room it faces.
+export function buildWall(def: WallDef, breaks: readonly number[] = []): BoxSpec[] {
   const { wallThickness: T, maxWallSegment, cornerInset } = TUNING.house;
   const H = def.height ?? TUNING.house.wallHeight;
   const alongX = def.a[1] === def.b[1];
@@ -47,12 +50,22 @@ export function buildWall(def: WallDef): BoxSpec[] {
   const pieces: { t0: number; t1: number; y0: number; y1: number; glass?: boolean }[] = [];
   const gaps = [...(def.gaps ?? [])].sort((g, h) => g.from - h.from);
 
-  const addSolid = (t0: number, t1: number) => {
+  const cuts = breaks.map((u) => (u - start) * sign);
+  const addRun = (t0: number, t1: number) => {
     if (t1 - t0 < 1e-3) return;
     const n = Math.max(1, Math.ceil((t1 - t0) / maxWallSegment));
     for (let i = 0; i < n; i++) {
       pieces.push({ t0: t0 + ((t1 - t0) * i) / n, t1: t0 + ((t1 - t0) * (i + 1)) / n, y0: 0, y1: H });
     }
+  };
+  const addSolid = (t0: number, t1: number) => {
+    const inside = cuts.filter((c) => c > t0 + 0.05 && c < t1 - 0.05).sort((a, b) => a - b);
+    let from = t0;
+    for (const c of inside) {
+      addRun(from, c);
+      from = c;
+    }
+    addRun(from, t1);
   };
 
   let cursor = 0;

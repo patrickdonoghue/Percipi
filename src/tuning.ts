@@ -70,8 +70,8 @@ export const TUNING = {
 
   render: {
     maxPixelRatio: 2,
-    ambientIntensity: 0.35,
-    sunIntensity: 1.8,
+    ambientIntensity: 1.8, // sky + ground bounce light (lifts the shadows indoors)
+    sunIntensity: 1.5,
     sunPosition: [7, 14, 3] as const, // key light: angled so each wall direction gets its own shade
     fillIntensity: 0.6,
     fillPosition: [-4, 6, -9] as const,
@@ -89,11 +89,24 @@ export const TUNING = {
       tileFloor: 0xd8d4cc,
       grass: 0x6f9a52,
       concrete: 0xaaa69f,
-      wallInside: 0xece6da, // warm off-white paint
-      wallOutside: 0x9fb0bd, // blue-grey siding, so the house reads clearly from above
+      wallInside: 0xf1e7d3, // warm cream paint (rooms without their own colour below)
+      wallOutside: 0xffd24f, // sunny yellow siding, bright against the white trim and green yard
       fence: 0x9b7653,
-      porchTrim: 0xe6e1d8, // porch posts and roof
+      porchTrim: 0xf4f1ea, // porch posts and roof (white trim, like the window frames)
+      frontDoor: 0xb8402f, // a red front door (tints the door model)
     },
+    // Wall paint for each room, by its floor's id in layout.ts (both sides of a wall get their own room's colour).
+    roomPaint: {
+      kitchen_floor: 0xffe3a8, // warm buttercream
+      living_floor: 0xffe3a8,
+      hall_floor: 0xfbeed6,
+      bed1_floor: 0x9fcbf2, // soft sky blue (where he wakes)
+      bed2_floor: 0xbde29a, // sage green
+      bath_floor: 0x94e0d0, // seafoam
+    },
+    sunColor: 0xfff0d6, // warm morning sun
+    ambientColor: 0xfff8ee, // sky light from above, fills the shadows (a hemisphere light)
+    groundColor: 0xd8b48c, // warm light bounced up from floors and grass
     window: {
       frameColor: 0xf4f1ea,
       frameWidth: 0.06, // metres

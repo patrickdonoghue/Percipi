@@ -132,7 +132,7 @@ export async function applyModels(items: readonly Perceivable[]): Promise<void> 
       try {
         p.mesh.geometry = await buildModel(spec);
         const mat = p.mesh.material as MeshStandardMaterial;
-        mat.color.set(0xffffff);
+        mat.color.set(spec.tint ?? 0xffffff);
         mat.vertexColors = true;
         mat.map = (p.mesh.geometry.userData.map as Texture | null) ?? null;
         mat.needsUpdate = true;

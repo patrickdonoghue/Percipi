@@ -85,8 +85,8 @@ export const WALLS: WallDef[] = [
 
 export const DOORS: DoorDef[] = [
   // ('-z' = up the plan, towards the backyard)
-  doorPx('door_front', [880, 1350], '-x', 80, -1), // opens into the living area
-  doorPx('door_patio', [745, 589], '+x', 90, 1), // out to the patio; a fixed glass panel fills the rest of the opening
+  doorPx('door_front', [880, 1350], '-x', 80, -1, 0), // opens into the living area; starts shut
+  doorPx('door_patio', [745, 589], '+x', 90, 1, 0), // starts shut; out to the patio; a fixed glass panel fills the rest of the opening
   doorPx('door_bed2', [997, 893], '+x', 83, 1), // into bedroom #2 (hinge at the closet wall's face, not its middle)
   doorPx('door_bed1', [997, 1043], '+x', 83, -1), // into bedroom #1
   doorPx('door_bath', [1088, 1035], '-z', 73, -1), // into the bath
