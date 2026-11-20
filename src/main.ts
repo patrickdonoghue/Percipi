@@ -12,6 +12,7 @@ import { Recorder } from './replay/recorder';
 import { ReplayMode } from './replay/replayMode';
 import { createEndButton } from './replay/ui';
 import { Eyes } from './eyes';
+import { Hints } from './hints';
 import { setupWake } from './wake';
 import { Director } from './world/director';
 import { buildGreybox } from './world/greybox';
@@ -51,10 +52,17 @@ const hud = new Hud();
 const pov = new PovMode(canvas, world);
 pov.addInteractable(director.alarmSwitch);
 let walkTime = 0; // seconds since waking
+const hints = new Hints();
+let walked = 0; // metres walked since the eyes opened (the walk hint fades after a few)
+const lastPos = { x: 0, z: 0 };
+let replayHinted = false;
 
 // He wakes with eyes closed; a tap opens them (then he can move).
 const eyes = new Eyes(() => {
   pov.inputEnabled = true;
+  lastPos.x = pov.player.x;
+  lastPos.z = pov.player.z;
+  hints.setStage('walk');
 });
 const lights = [
   { light: ambient, full: TUNING.render.ambientIntensity },
@@ -80,6 +88,7 @@ const endWalk = () => {
   wake.disable();
   endButton.hide();
   pov.inputEnabled = false;
+  hints.setStage(null); // the replay hint comes once playback starts
   director.stopAll();
   if (document.pointerLockElement) document.exitPointerLock();
   replay = new ReplayMode(renderer, scene, pov.camera, canvas, recorder.frames, recorder.events, recorder.plume, audio, world, dissolve);
@@ -126,6 +135,12 @@ renderer.setAnimationLoop(() => {
   if (mode === 'pov') {
     walkTime += dt;
     pov.update(dt);
+    if (eyes.isOpen) {
+      walked += Math.hypot(pov.player.x - lastPos.x, pov.player.z - lastPos.z);
+      lastPos.x = pov.player.x;
+      lastPos.z = pov.player.z;
+      if (walked > TUNING.hints.walkDoneMetres) hints.done();
+    }
     scene.updateMatrixWorld();
     director.update(walkTime, pov.player.x, pov.player.z);
     audio.setListener(pov.camera.position, pov.forward());
@@ -143,6 +158,11 @@ renderer.setAnimationLoop(() => {
     setDaylight(1);
     scene.background = null;
     replay.update(dt);
+    if (replay.playing && !replayHinted) {
+      replayHinted = true;
+      hints.setStage('replay');
+    }
+    if (replay.userMoved) hints.done();
   }
 
   updateHeadTracking(dt); // after the animations and the look target are set

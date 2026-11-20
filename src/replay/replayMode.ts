@@ -35,6 +35,8 @@ export class ReplayMode {
   private readonly ear = new Vector3();
   private readonly earForward = new Vector3();
   private phase: 'zoom' | 'hold' | 'play' = 'zoom';
+  /** The user has turned or zoomed the view themselves (the hint can go). */
+  userMoved = false;
   private phaseTime = 0;
 
   private readonly startPos = new Vector3();
@@ -86,6 +88,13 @@ export class ReplayMode {
     this.controls.maxDistance = r.maxDistance;
     this.controls.maxPolarAngle = r.maxPolarDeg * DEG;
     this.controls.enablePan = false; // the camera follows him instead
+    this.controls.addEventListener('start', () => (this.userMoved = true));
+    // Space plays and pauses (a focused button handles Space itself).
+    window.addEventListener('keydown', (e) => {
+      if (e.code !== 'Space' || this.phase !== 'play' || e.target instanceof HTMLButtonElement) return;
+      e.preventDefault();
+      this.playback.togglePlay();
+    });
 
     this.dollhouse = new Dollhouse(world.items);
     this.playback = new Playback(frames, world.items, world.doors);
@@ -215,6 +224,11 @@ export class ReplayMode {
     this.ear.set(f.x, TUNING.player.eyeHeight, f.z);
     lookTarget.copy(this.ear); // the caller watches where his head was
     this.earForward.set(-Math.sin(f.yaw) * Math.cos(f.pitch), Math.sin(f.pitch), -Math.cos(f.yaw) * Math.cos(f.pitch));
+  }
+
+  /** Playback has started (after the zoom-out). */
+  get playing(): boolean {
+    return this.phase === 'play';
   }
 
   private enter(phase: 'zoom' | 'hold' | 'play'): void {

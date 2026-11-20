@@ -109,6 +109,13 @@ export const TUNING = {
     ignoreTapSeconds: 0.35, // the wake-up tap itself doesn't also open the eyes
   },
 
+  hints: {
+    delaySeconds: 1.0, // pause before a hint appears (after the eyes open / the replay starts)
+    minSeconds: 4, // a hint stays at least this long, even once you've done it
+    maxSeconds: 12, // and goes by itself after this long
+    walkDoneMetres: 3, // the walk hint fades once you've walked this far
+  },
+
   hud: {
     updateIntervalSeconds: 0.5,
   },
