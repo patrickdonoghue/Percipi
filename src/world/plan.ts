@@ -71,7 +71,7 @@ export function wallPx(id: string, a: [number, number], b: [number, number], gap
 }
 
 // A door hinged at a plan point, running `along` when closed, filling a gap `widthPx` wide.
-export function doorPx(id: string, hinge: [number, number], along: Direction, widthPx: number, swingSign: 1 | -1): DoorDef {
+export function doorPx(id: string, hinge: [number, number], along: Direction, widthPx: number, swingSign: 1 | -1, startOpen?: number): DoorDef {
   const clearance = 0.02;
   const ux = along === '+x' ? 1 : along === '-x' ? -1 : 0;
   const uz = along === '+z' ? 1 : along === '-z' ? -1 : 0;
@@ -81,5 +81,6 @@ export function doorPx(id: string, hinge: [number, number], along: Direction, wi
     along,
     width: widthPx / PX_PER_M - 2 * clearance,
     swingSign,
+    ...(startOpen !== undefined ? { startOpen } : {}),
   };
 }

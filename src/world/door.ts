@@ -22,6 +22,7 @@ export interface DoorDef {
   along: Direction; // direction the closed door runs from its hinge
   width: number;
   swingSign: 1 | -1; // which way it opens
+  startOpen?: number; // how open it is at the start (0..1); default door.startOpenFraction
 }
 
 // A door that swings on its hinge. It is perceivable (and blocks sight) like any wall.
@@ -48,6 +49,7 @@ export class Door implements Interactable {
     this.pivot.position.set(def.hinge[0], 0, def.hinge[1]);
     // Local +x is the door's length; rotate so it points along `along` when closed.
     this.closedYaw = DIR[def.along].yaw;
+    this.openness = this.target = def.startOpen ?? TUNING.door.startOpenFraction;
     this.maxOpenDeg = this.openLimit(walls);
     this.item = makePerceivable(def.id, 'door', mesh, true);
     this.applyRotation();
