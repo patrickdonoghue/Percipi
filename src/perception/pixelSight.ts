@@ -51,6 +51,9 @@ export const pixelSightUniforms = {
   uAtlasCols: { value: COLS },
   uAtlasRows: { value: ROWS },
   uSoftEdges: { value: TUNING.pixelSight.softEdges ? 1 : 0 },
+  uSlantBias: { value: TUNING.pixelSight.slantBias },
+  uTexelAngle: { value: (2 * Math.tan(TUNING.sight.coneHalfAngleDeg * DEG)) / TUNING.pixelSight.tileSize }, // metres per snapshot pixel, per metre away
+  uMaxSlant: { value: TUNING.pixelSight.maxSlant },
   uCosInner: { value: Math.cos((TUNING.sight.coneHalfAngleDeg - TUNING.pixelSight.coneFeatherDeg) * DEG) },
 };
 
@@ -80,13 +83,16 @@ uniform float uAtlasCols;
 uniform float uAtlasRows;
 uniform float uSoftEdges;
 uniform float uCosInner;
+uniform float uSlantBias;
+uniform float uTexelAngle;
+uniform float uMaxSlant;
 
 // Depth test for one point of a snapshot tile: 1 = nothing was in front of it.
-float sightDepth(vec2 cell, vec2 ndc, float w) {
+float sightDepth(vec2 cell, vec2 ndc, float w, float extra) {
   vec2 uv = (cell + ndc * 0.5 + 0.5) / vec2(uAtlasCols, uAtlasRows);
   float z = texture2D(uSightAtlas, uv).r;
   float nearest = (uSightNear * uSightFar) / (uSightFar - z * (uSightFar - uSightNear));
-  return w <= nearest + uSightBias + uSightBiasSlope * w + uSightThickness ? 1.0 : 0.0;
+  return w <= nearest + uSightBias + uSightBiasSlope * w + uSightThickness + extra ? 1.0 : 0.0;
 }
 
 // How visible point p was in snapshot i: 0 (not seen) .. 1 (clearly seen).
@@ -94,7 +100,7 @@ float sightDepth(vec2 cell, vec2 ndc, float w) {
 // that sweeps across the room as he turns his head fades instead of cutting.
 // (The depth test itself stays a single sharp sample: blurring it made floors
 // seen at a shallow angle break up into dots.)
-float sightLit(int i, vec3 p) {
+float sightLit(int i, vec3 p, vec3 n) {
   vec3 d = p - uSlotEye[i];
   float dist = length(d);
   if (dist > uMaxDist) return 0.0;
@@ -107,7 +113,13 @@ float sightLit(int i, vec3 p) {
   if (abs(ndc.x) > 1.0 || abs(ndc.y) > 1.0) return 0.0;
   float tile = uSlotTile[i];
   vec2 cell = vec2(mod(tile, uAtlasCols), floor(tile / uAtlasCols));
-  float v = sightDepth(cell, ndc, clip.w);
+  // Surfaces seen at a slant (the ground far away) cover very few pixels of the
+  // snapshot, so one pixel's depth spans a long stretch of them and the test
+  // flips row by row (stripes). Allow tolerance in proportion to the slant.
+  float facing = max(abs(dot(n, d / dist)), 0.05);
+  float slant = min(sqrt(1.0 - facing * facing) / facing, uMaxSlant);
+  float extra = uSlantBias * uTexelAngle * dist * slant;
+  float v = sightDepth(cell, ndc, clip.w, extra);
   return uSoftEdges < 0.5 ? v : v * smoothstep(uCosHalf, uCosInner, c);
 }
 
@@ -119,9 +131,11 @@ float pixelDissolve(vec3 p) {
   float streakStart = -1.0;
   bool streak = true;
   float best = 0.0; // strongest (visibility x freshness) over the snapshots
+  // This surface's facing, from how the position changes across the screen.
+  vec3 n = normalize(cross(dFdx(p), dFdy(p)));
   for (int i = 0; i < SIGHT_SLOTS; i++) {
     if (uSlotValid[i] < 0.5) continue;
-    float v = sightLit(i, p);
+    float v = sightLit(i, p, n);
     // Eased: lingers at first, then drains away (gentler than a straight line).
     best = max(best, v * (1.0 - smoothstep(0.0, uVanish, uSlotAge[i])));
     if (v > 0.5) {

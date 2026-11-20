@@ -151,6 +151,8 @@ export const TUNING = {
     near: 0.1, // metres
     biasMetres: 0.04, // tolerance so surfaces don't hide themselves
     biasSlope: 0.004, // extra tolerance per metre of distance
+    slantBias: 2.5, // extra tolerance for surfaces seen at a slant, stops stripes on the ground (0 = off)
+    maxSlant: 10, // cap on that slant allowance (higher hides stripes further out but can see past low edges)
     softEdges: true, // feather the edge of his view cone in the replay (false = hard edge)
     coneFeatherDeg: 12, // the edge of his view cone fades over this many degrees
   },
