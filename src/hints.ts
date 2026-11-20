@@ -13,8 +13,8 @@ const TEXT: Record<HintStage, { mouse: string; touch: string }> = {
     touch: 'Drag left side to walk · drag right side to look · tap a door button to open it',
   },
   replay: {
-    mouse: 'Drag to turn · scroll to zoom · Space pauses · drag the bar to rewind',
-    touch: 'Drag to turn · pinch to zoom · ❚❚ pauses · drag the bar to rewind',
+    mouse: 'Drag to orbit · scroll to zoom · Space pauses · drag the bar to rewind',
+    touch: 'Drag to orbit · pinch to zoom · ❚❚ pauses · drag the bar to rewind',
   },
 };
 
